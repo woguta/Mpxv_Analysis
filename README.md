@@ -126,7 +126,7 @@ nano auspice_config.json
 ls config
 ```
 ```
-#augur export v2 --help
+augur export v2 --help
 ```
 ## Export results with
 ```
