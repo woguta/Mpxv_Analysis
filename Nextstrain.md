@@ -106,7 +106,7 @@ augur traits \
   --tree ./results/mpox_tree.nwk \
   --metadata ./mpox_212_tree_labels.csv \
   --output-node-data ./results/mpox_traits.json \
-  --columns region country \
+  --columns clade date country \
   --confidence
 ```
 b. Infer Ancestral Sequences
