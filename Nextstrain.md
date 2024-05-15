@@ -113,7 +113,7 @@ b. Infer Ancestral Sequences
 ```
 augur ancestral \
   --tree ./results/mpox_tree.nwk \
-  --alignment ./results/Mpox_alignment_mafft3.fasta \
+  --alignment ./results/mpox_aligned_data_58.fasta \
   --output-node-data ./results/mpox_nt_muts.json \
   --inference joint
 ```
