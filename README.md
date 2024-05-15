@@ -118,30 +118,70 @@ mkdir config
 ```
 cd config
 ```
+## Upgrade Nextstrain
 ```
-nano auspice_config.json
+nextstrain update conda
 ```
-## Verify
-```
-ls config
-```
+Check how to use augur
 ```
 augur export v2 --help
 ```
-## Export results with
+## Create a json file and validate in json file validator
 ```
-augur export v2 \
-  --tree ./results/mpox_tree.nwk \
-  --metadata ./mpox_212_tree_labels.csv \
-  --node-data ./results/mpox_branch_lengths.json \
-              ./results/mpox_traits.json \
-              ./results/mpox_nt_muts.json \
-              ./results/mpox_aa_muts.json \
-  --colors config/colors.tsv \
-  --lat-longs config/lat_longs.tsv \ 
-  --output ./results/mpox.json
+ "title": "Phylodynamics of Monkeypox virus in Africa",
+  "colorings": [
+    {
+      "key": "Date",
+      "title": "Year",
+      "type": "continuous"
+    },
+    {
+      "key": "host",
+      "title": "Host",
+      "type": "categorical"
+    },
+    {
+      "key": "country",
+      "title": "Country",
+      "type": "categorical"
+    },
+    {
+      "key": "clade",
+      "title": "Clade",
+      "type": "categorical"
+    }
+  ],
+  "geo_resolutions": [
+      "country"
+    ],
+  "maintainers": [
+    {"name": "WHO/EPR/HIR:"},
+    {"name": "Walter Oguta"},
+    {"name": "Rachel Achilla"}
+    ],
+
+  "display_defaults": {
+    "layout": "rect",
+    "color_by": "Clades",
+    "branch_label": "clade"
+
+  }
+}
 ```
-0R
+## Create a colours.tsv file
+```
+attribute   value       color
+country     Nigeria     #FFFF00
+country     Central_African_Republic #1CE6FF
+country     Benin       #FF34FF
+clade       Clade I     #809693
+clade       Clade IIa   #D16100
+clade       Clade IIb A #300018
+date        1970-XX-XX  #FF913F
+date        1971-XX-XX  #938A81
+```
+
+## Export the results into json file for view in auspice
 ```
 augur export v2 \
   --tree ./results/mpox_tree.nwk \
@@ -150,8 +190,8 @@ augur export v2 \
   --node-data ./results/mpox_traits.json \
   --node-data ./results/mpox_nt_muts.json \
   --node-data ./results/mpox_aa_muts.json \
-  --colors config/colors.tsv \
-  --lat-longs config/lat_longs.tsv \
+  --colors ./config/colors.tsv \
+  --lat-longs ./config/lat_longs.tsv \
   --auspice-config config/auspice_config.json \
-  --output auspice/mpox.json
+  --output ./results/auspice/mpox.json
 ```
