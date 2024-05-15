@@ -146,7 +146,7 @@ Create a json file and validate in json file validator
  "title": "Phylodynamics of Monkeypox virus in Africa",
   "colorings": [
     {
-      "key": "Date",
+      "key": "year",
       "title": "Year",
       "type": "continuous"
     },
@@ -167,7 +167,7 @@ Create a json file and validate in json file validator
     }
   ],
   "geo_resolutions": [
-      "country"
+      "Country"
     ],
   "maintainers": [
     {"name": "WHO/EPR/HIR:"},
@@ -177,7 +177,7 @@ Create a json file and validate in json file validator
 
   "display_defaults": {
     "layout": "rect",
-    "color_by": "Clades",
+    "color_by": "Clade",
     "branch_label": "clade"
 
   }
