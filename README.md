@@ -1,42 +1,38 @@
 # Phylogenetic And Evlutionary Analysis
 
 ## A. Nextstrain
-## Installing nextstrain
-
-## 1. Install Nextstrain CLI
+Installing nextstrain
+1. Install Nextstrain CLI
 ```
 curl -fsSL --proto '=https' https://nextstrain.org/cli/installer/linux | bash
 ```
-
-## 2. Set up a Nextstrain runtime
+2. Set up a Nextstrain runtime
 ```
 nextstrain setup --set-default conda
 ```
-
-## 3. Enter an interactive Nextstrain shell in the current directory (.).
+3. Enter an interactive Nextstrain shell in the current directory (.).
 ```
 nextstrain shell .
 ```
-## 4. Run Augur.
+4. Run Augur.
 ```
 augur --help
 ```
-## 5. Run Auspice.
+5. Run Auspice.
 ```
 auspice --help
 ```
-
-## 6. Exit the Nextstrain shell.
+6. Exit the Nextstrain shell.
 ```
 exit
 ```
-## 6. Index the sequences
+7. Index the sequences
 ```
 augur index \
   --sequences ./mpox.fasta \
   --output results/mpox_sequences_index.tsv
 ```
-## 7. Filter the Sequences
+8. Filter the Sequences
 ```
 augur filter \
   --sequences ./mpox.fasta \
@@ -47,7 +43,7 @@ augur filter \
   --sequences-per-group 20 \
   --min-date 1970
 ```
-## 8. Filter the Sequences to drop some already analyzed seqs
+9. Filter the Sequences to drop some already analyzed seqs
 ```
 augur filter \
   --sequences ./mpox.fasta \
@@ -59,7 +55,7 @@ augur filter \
   --sequences-per-group 20 \
   --min-date 1970
 ```
-## 9. Align the Sequences
+10. Align the Sequences
 ```
 augur align \
   --sequences ./results/mpox_filtered.fasta \
@@ -68,7 +64,7 @@ augur align \
   --fill-gaps
 ```
 
-## 10. Get a Time-Resolved Tree
+11. Get a Time-Resolved Tree
 ```
 augur refine \
   --tree ./results/mpox_fasttree_data_38.nwk \
@@ -83,9 +79,8 @@ augur refine \
   --clock-filter-iqd 4
 ```
 
-## 11. Annotate the Phylogeny
-
-## a. Reconstruct Ancestral Traits
+12. Annotate the Phylogeny
+a. Reconstruct Ancestral Traits
 ```
 augur traits \
   --tree ./results/mpox_tree.nwk \
@@ -94,7 +89,7 @@ augur traits \
   --columns region country \
   --confidence
 ```
-## b. Infer Ancestral Sequences
+b. Infer Ancestral Sequences
 ```
 augur ancestral \
   --tree ./results/mpox_tree.nwk \
@@ -102,7 +97,7 @@ augur ancestral \
   --output-node-data ./results/mpox_nt_muts.json \
   --inference joint
 ```
-## c. Identify Amino-Acid Mutations ref nust be in gb file format
+c. Identify Amino-Acid Mutations ref nust be in gb file format
 ```
 augur translate \
   --tree ./results/mpox_tree.nwk \
@@ -110,15 +105,15 @@ augur translate \
   --reference-sequence ./mpox_ref.gb \
   --output-node-data results/mpox_aa_muts.json
 ```
-## 12. Export the Results
-## Create the Config Directory
+13. Export the Results
+Create the Config Directory
 ```
 mkdir config
 ```
 ```
 cd config
 ```
-## Upgrade Nextstrain
+Upgrade Nextstrain
 ```
 nextstrain update conda
 ```
@@ -126,7 +121,7 @@ Check how to use augur
 ```
 augur export v2 --help
 ```
-## Create a json file and validate in json file validator
+Create a json file and validate in json file validator
 ```
  "title": "Phylodynamics of Monkeypox virus in Africa",
   "colorings": [
@@ -168,7 +163,7 @@ augur export v2 --help
   }
 }
 ```
-## Create a colours.tsv file
+Create a colours.tsv file
 ```
 attribute   value       color
 country     Nigeria     #FFFF00
@@ -180,8 +175,23 @@ clade       Clade IIb A #300018
 date        1970-XX-XX  #FF913F
 date        1971-XX-XX  #938A81
 ```
-
-## Export the results into json file for view in auspice
+Create lat_long.tsv file
+```
+ountry latitude        longitude
+Nigeria 9.6000359       7.9999721
+Benin   9.5293472       2.2584408
+Cameroon        4.6125522       13.1535811
+Congo   -2.9814344      23.8222636
+Central_African_Republic        7.0323598       19.9981227
+DRC     -2.9814344      23.8222636
+Egypt   26.2540493      29.2675469
+Gabon   -1      11.75
+Liberia 5.7499721       -9.3658524
+South_Africa    -28.8166236     24.991639
+Sudan   10.9    6.5
+Sierra_Leone    8.5     -11.5
+```
+Export the results into json file for view in auspice ```https://auspice.us```
 ```
 augur export v2 \
   --tree ./results/mpox_tree.nwk \
