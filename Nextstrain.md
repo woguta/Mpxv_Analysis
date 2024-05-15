@@ -65,7 +65,9 @@ augur align \
 ```
 
 11. Get a Time-Resolved Tree
-Use 
+
+Use
+
 ```
 augur refine \
   --tree ./results/mpox_fasttree_data_38.nwk \
@@ -80,6 +82,7 @@ augur refine \
   --clock-filter-iqd 4
 ```
 Or
+
 ```
 augur refine \
   --tree ./results/mpox_fasttree_data_58.nwk \
@@ -96,6 +99,7 @@ augur refine \
 ```
 
 12. Annotate the Phylogeny
+
 a. Reconstruct Ancestral Traits
 ```
 augur traits \
