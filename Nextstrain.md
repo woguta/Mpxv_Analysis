@@ -1,4 +1,4 @@
-# Phylogenetic And Evlutionary Analysis
+# Phylogenetic and evolutionary analysis
 
 ## A. Nextstrain
 Installing nextstrain
