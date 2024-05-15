@@ -70,8 +70,8 @@ Use
 
 ```
 augur refine \
-  --tree ./results/mpox_fasttree_data_38.nwk \
-  --alignment ./results/Mpox_alignment_mafft3.fasta \
+  --tree ./results/mpox_fasttree_data_58.nwk \
+  --alignment ./results/mpox_aligned_data_58.fasta \
   --metadata ./mpox_212_tree_labels.csv \
   --output-tree ./results/mpox_tree.nwk \
   --output-node-data ./results/mpox_branch_lengths.json \
