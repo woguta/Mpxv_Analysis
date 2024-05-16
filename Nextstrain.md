@@ -157,7 +157,7 @@ augur frequencies \
 	--tree ./results/mpox_tree.nwk \
 	--include-internal-nodes \
 	--alignment ./results/mpox_aligned_data_58.fasta \
-	--output-node-data ./results/mpox_tip-frequencies.json
+	--output ./results/mpox_tip-frequencies.json
 ```
  
 13. Export the Results
