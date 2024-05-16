@@ -162,7 +162,8 @@ augur export v2 --help
 ```
 Create a json file and validate in json file validator
 ```
- "title": "Phylodynamics of Monkeypox virus in Africa",
+ {
+  "title": "Phylodynamics of Monkeypox virus in Africa",
   "colorings": [
     {
       "key": "year",
@@ -183,21 +184,30 @@ Create a json file and validate in json file validator
       "key": "clade",
       "title": "Clade",
       "type": "categorical"
+    },
+    {
+      "key": "country",
+      "title": "Country",
+      "type": "categorical"
     }
   ],
   "geo_resolutions": [
       "Country"
     ],
   "maintainers": [
-    {"name": "WHO/EPR/HIR:"},
+    {"name": "WHO/EPR/HIR"},
     {"name": "Walter Oguta"},
     {"name": "Rachel Achilla"}
     ],
 
+  "filters": [
+    "Year", "Clade", "Country", "Host"
+  ],
   "display_defaults": {
     "layout": "rect",
     "color_by": "Clade",
-    "branch_label": "clade"
+    "branch_label": "Clade",
+    "geo_resolution": "Country"
 
   }
 }
@@ -216,19 +226,18 @@ date        1971-XX-XX  #938A81
 ```
 Create lat_long.tsv file
 ```
-ountry latitude        longitude
-Nigeria 9.6000359       7.9999721
-Benin   9.5293472       2.2584408
-Cameroon        4.6125522       13.1535811
-Congo   -2.9814344      23.8222636
-Central_African_Republic        7.0323598       19.9981227
-DRC     -2.9814344      23.8222636
-Egypt   26.2540493      29.2675469
-Gabon   -1      11.75
-Liberia 5.7499721       -9.3658524
-South_Africa    -28.8166236     24.991639
-Sudan   10.9    6.5
-Sierra_Leone    8.5     -11.5
+country Benin   9.961027        2.327362
+country Central_African_Republic        7.0323598       19.9981227
+country Cameroon        4.6125522       13.1535811
+country Congo   -0.516362       15.877811
+country DRC     -4.0383 21.7587
+country Egypt   26.8206 30.8025
+country Gabon   -0.8999695      11.6899699
+country Liberia 5.7499721       -9.3658524
+country Nigeria 9.6000359       7.9999721
+country Sierra_Leone    8.6400349       -11.8400269
+country South_Africa    -28.8166235     24.991639
+country Sudan   14.5844444      29.4917691
 ```
 Export the results into json file for view in auspice ```https://auspice.us```
 ```
@@ -242,6 +251,6 @@ augur export v2 \
   --node-data ./results/mpox_tip-frequencies.json
   --colors ./config/colors.tsv \
   --lat-longs ./config/lat_longs.tsv \
-  --auspice-config config/auspice_config.json \
+  --auspice-config ./config/auspice_config.json \
   --output ./results/auspice/mpox.json
 ```
