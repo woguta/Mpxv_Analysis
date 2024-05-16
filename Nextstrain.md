@@ -76,7 +76,23 @@ augur refine \
   --output-tree ./results/mpox_tree.nwk \
   --output-node-data ./results/mpox_branch_lengths.json \
   --timetree \
-  --stochastic-resolve \
+  --coalescent opt \
+  --date-confidence \
+  --date-inference marginal \
+  --clock-filter-iqd 4
+```
+
+OR - Best option
+
+```
+augur refine \
+  --tree ./results/mpox_fasttree_data_58.nwk \
+  --alignment ./results/mpox_aligned_data_58.fasta \
+  --metadata ./mpox_212_tree_labels.csv \
+  --output-tree ./results/mpox_tree.nwk \
+  --output-node-data ./results/mpox_branch_lengths.json \
+  --timetree \
+  --year-bounds 1970 2024 \
   --coalescent opt \
   --date-confidence \
   --date-inference marginal \
