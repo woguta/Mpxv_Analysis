@@ -93,8 +93,8 @@ augur refine \
   --output-node-data ./results/mpox_branch_lengths.json \
   --timetree \
   --stochastic-resolve \
-  --clock-rate  0.0001 \
-  --clock-std-dev  0.00001 \
+  --clock-rate  0.001 \
+  --clock-std-dev  0.0001 \
   --year-bounds 1970 2024 \
   --coalescent opt \
   --date-confidence \
