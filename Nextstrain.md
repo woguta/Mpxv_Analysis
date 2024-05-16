@@ -111,7 +111,7 @@ augur refine \
   --stochastic-resolve \
   --clock-rate  0.001 \
   --clock-std-dev  0.0001 \
-  --year-bounds 1970 2024 \
+  --year-bounds 1970 2030 \
   --coalescent opt \
   --date-confidence \
   --date-inference marginal \
@@ -153,7 +153,7 @@ augur frequencies \
 	--metadata ./mpox_212_tree_labels.csv \
 	--pivot-interval-units 'months' \
 	--min-date 1970-01-01 \
-	--max-date 2024-12-31 \
+	--max-date 2030-12-31 \
 	--tree ./results/mpox_tree.nwk \
 	--include-internal-nodes \
 	--alignment ./results/mpox_aligned_data_58.fasta \
