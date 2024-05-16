@@ -240,6 +240,7 @@ country South_Africa    -28.8166235     24.991639
 country Sudan   14.5844444      29.4917691
 ```
 Export the results into json file for view in auspice ```https://auspice.us```
+
 ```
 augur export v2 \
   --tree ./results/mpox_tree.nwk \
@@ -248,7 +249,7 @@ augur export v2 \
   --node-data ./results/mpox_traits.json \
   --node-data ./results/mpox_nt_muts.json \
   --node-data ./results/mpox_aa_muts.json \
-  --node-data ./results/mpox_tip-frequencies.json
+  --node-data ./results/mpox_tip-frequencies.json \
   --colors ./config/colors.tsv \
   --lat-longs ./config/lat_longs.tsv \
   --auspice-config ./config/auspice_config.json \
