@@ -132,15 +132,15 @@ augur translate \
 d. Infer tip frequencies of mutations or clades
 
 augur frequencies \
-	--method kde \
-	--metadata ./mpox_212_tree_labels.csv \
-	--pivot-interval-units 'months' \
-	--min-date 1970-01-01 \
-	--max-date 2024-12-31 \
-	--tree ./results/mpox_tree.nwk \
-	--include-internal-nodes \
-	--alignment ./results/mpox_aligned_data_58.fasta \
-	--output ./results/mpox_tip-frequencies.json
+  --method kde \
+  --metadata ./mpox_212_t  
+  --pivot-interval-units 'months' \
+  --min-date 1970-01-01 \
+  --max-date 2024-12-31 \
+  --tree ./results/mpox_tree.nwk \
+  --include-internal-nodes \
+  --alignment ./results/mpox_aligned_data_58.fasta \
+  --output ./results/mpox_tip-frequencies.json
 
  
 13. Export the Results
