@@ -142,7 +142,7 @@ augur translate \
   --tree ./results/mpox_tree.nwk \
   --ancestral-sequences ./results/mpox_nt_muts.json \
   --reference-sequence ./mpox_ref.gb \
-  --output-node-data results/mpox_aa_muts.json
+  --output-node-data ./results/mpox_aa_muts.json
 ```
 
 d. Infer tip frequencies of mutations or clades
