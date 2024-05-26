@@ -151,7 +151,8 @@ d. Infer tip frequencies of mutations or clades
 augur frequencies \
 	--method kde \
 	--metadata ./mpox_212_tree_labels.csv \
-	--pivot-interval-units 'months' \
+	--pivot-interval-units months \
+        --pivot-interval 12 \
 	--min-date 1970-01-01 \
 	--max-date 2030-12-31 \
 	--tree ./results/mpox_tree.nwk \
