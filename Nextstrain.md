@@ -68,6 +68,7 @@ augur align \
     
 NB Remove fasta seq length in the header
 
+Shell
 ```
 #!/bin/bash
 
@@ -78,7 +79,7 @@ output_file="./mpox_data/mpox_270_cleaned_aligned.fasta"
 # Remove sequence length from headers and write to output file
 sed 's/\/[0-9]\+-[0-9]\+//' "$input_file" > "$output_file"
 ```
-# R script
+R script
 ```
 # Read the FASTA file
 fasta_file <- "./mpox_data/mpox_270_aligned.fasta"
@@ -126,16 +127,16 @@ OR - this is the best option
 
 ```
 augur refine \
-  --tree ./results/mpox_fasttree_data_58.nwk \
-  --alignment ./results/mpox_aligned_data_58.fasta \
-  --metadata ./mpox_212_tree_labels.csv \
+  --tree ./mpox_data/mpox_272_tree.nwk \
+  --alignment ./mpox_data/mpox_270_cleaned_aligned.fasta \
+  --metadata ./mpox_data/mpox_data_270.csv \
   --output-tree ./results/mpox_tree.nwk \
   --output-node-data ./results/mpox_branch_lengths.json \
   --timetree \
   --stochastic-resolve \
   --clock-rate  0.001 \
   --clock-std-dev  0.0001 \
-  --year-bounds 1970 2030 \
+  --year-bounds 1970 2024 \
   --coalescent opt \
   --date-confidence \
   --date-inference marginal \
