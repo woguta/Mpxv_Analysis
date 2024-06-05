@@ -99,6 +99,18 @@ augur refine \
   --clock-filter-iqd 4
 ```
 OR
+NB Remove fasta seq length in the header
+```
+#!/bin/bash
+
+# Input and output file paths
+input_file="./mpox_data/mpox_270_aligned.fasta"
+output_file="./mpox_data/mpox_270_cleaned_aligned.fasta"
+
+# Remove sequence length from headers and write to output file
+sed 's/\/[0-9]\+-[0-9]\+//' "$input_file" > "$output_file"
+```
+then
 
 ```
 augur refine \
