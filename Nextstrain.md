@@ -65,8 +65,32 @@ augur align \
 ```
 
 11. Get a Time-Resolved Tree
+    
+NB Remove fasta seq length in the header
 
-Use
+```
+#!/bin/bash
+
+# Input and output file paths
+input_file="./mpox_data/mpox_270_aligned.fasta"
+output_file="./mpox_data/mpox_270_cleaned_aligned.fasta"
+
+# Remove sequence length from headers and write to output file
+sed 's/\/[0-9]\+-[0-9]\+//' "$input_file" > "$output_file"
+```
+# R script
+```
+# Read the FASTA file
+fasta_file <- "./mpox_data/mpox_270_aligned.fasta"
+fasta_content <- readLines(fasta_file)
+
+# Remove sequence length from headers
+cleaned_content <- gsub("/[0-9]+-[0-9]+", "", fasta_content)
+
+# Write the cleaned content back to the file
+writeLines(cleaned_content, "mpox_270_cleaned_aligned.fasta")
+```
+Then use
 
 ```
 augur refine \
@@ -82,7 +106,7 @@ augur refine \
   --clock-filter-iqd 4
 ```
 
-OR - Best option
+OR
 
 ```
 augur refine \
@@ -98,19 +122,7 @@ augur refine \
   --date-inference marginal \
   --clock-filter-iqd 4
 ```
-OR
-NB Remove fasta seq length in the header
-```
-#!/bin/bash
-
-# Input and output file paths
-input_file="./mpox_data/mpox_270_aligned.fasta"
-output_file="./mpox_data/mpox_270_cleaned_aligned.fasta"
-
-# Remove sequence length from headers and write to output file
-sed 's/\/[0-9]\+-[0-9]\+//' "$input_file" > "$output_file"
-```
-then
+OR - this is the best option
 
 ```
 augur refine \
