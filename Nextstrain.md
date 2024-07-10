@@ -297,6 +297,9 @@ augur export v2 \
   --auspice-config ./config/auspice_config.json \
   --output ./results/auspice/mpox.json
 ```
-##B Pan-Genome Analysis using Panx
+##B. Pan-Genome Analysis using Panx
+
 Clone to conda terminal
+```
 git clone https://github.com/neherlab/pan-genome-analysis.git
+```
