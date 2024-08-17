@@ -120,8 +120,8 @@ done
 
 # Define directories
 WORK_DIR="/var/scratch/${USER}/viral_genomes/mpox_data"
-OUTPUT_DIR="${WORK_DIR}/mpox_results/prokka_data"
 PROKKA_DIR="${WORK_DIR}/mpox_results/mpox_prokka"
+OUTPUT_DIR="${WORK_DIR}/mpox_results/prokka_data"
 
 # Make the output directory if it doesn't exist
 if [ ! -e "${OUTPUT_DIR}" ]; then
@@ -218,7 +218,7 @@ echo "Concatenation for all samples is complete!"
 #!/bin/bash
 
 # Define directories
-WORK_DIR="/home/woguta/mpox_files"
+WORK_DIR="/var/scratch/woguta/viral_genomes/mpox_data"
 PROKKA_DIR="${WORK_DIR}/mpox_results/prokka_data"
 
 # Add a debug statement to check PPROKKA_DIR
@@ -317,10 +317,10 @@ echo "Concatenation for all samples is complete!"
 #!/bin/bash
 
 # Define directories
-WORK_DIR="/home/woguta/mpox_files/mpox_results/prokka_data"
-GFF_DIR="${WORK_DIR}/prokka_gff"
-GBK_DIR="${WORK_DIR}/prokka_gbk"
-GBF_DIR="${WORK_DIR}/prokka_gbf"
+WORK_DIR="/var/scratch/${USER}/viral_genomes/mpox_data"
+GFF_DIR="${WORK_DIR}/mpox_results/prokka_data/prokka_gff"
+GBK_DIR="${WORK_DIR}/mpox_results/prokka_data/prokka_gbk"
+GBF_DIR="${WORK_DIR}/mpox_results/prokka_data/prokka_gbf"
 
 # Loop through each sample in the GFF_DIR
 for gff_file in "${GFF_DIR}"/*.gff; do
