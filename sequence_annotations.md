@@ -113,7 +113,7 @@ for gz_file in "${FASTA_DIR}"/*.fasta.gz; do
     fi
 done
 ```
-2. Concatenate prokka data (gff, gbk, gbf & faa) per sample in its own folder
+2. Concatenate prokka data of interest (gffs, gbks, gbfs & faas) per sample in each samples own folder
 
 ```
 #!/bin/bash
