@@ -4,11 +4,13 @@
 ```
 #!/usr/bin/bash -l
 #SBATCH -p batch
-#SBATCH -J Em_prk_mpox
+#SBATCH -J Emb_Prk_Mpox
 #SBATCH -n 3
+#SBATCH --mem=8G
 
 # Exit with error reporting
 set -e
+set -x
 
 # Load modules
 module purge
@@ -36,9 +38,8 @@ for gz_file in "${FASTA_DIR}"/*.fasta.gz; do
     if [ -f "$gz_file" ]; then
         sample=$(basename "$gz_file" .fasta.gz)
         temp_fasta="${FASTA_DIR}/${sample}.temp.fasta"
-        output_path="${OUT_DIR}/${sample}"
-        clean_fasta="${FASTA_DIR}/${sample}.clean.fasta"
-        compressed_fasta="${OUT_DIR}/${sample}.clean.fasta.gz"
+        final_fasta="${FASTA_DIR}/${sample}.fasta"
+        compressed_fasta="${OUT_DIR}/${sample}.fasta.gz"
         output_path="${OUT_DIR}/${sample}"
 
         # Decompress the gz file to a temporary fasta file
@@ -56,24 +57,37 @@ for gz_file in "${FASTA_DIR}"/*.fasta.gz; do
             seqret -sequence "$temp_fasta" -outseq "$fasta_file"
         fi
 
-        # Clean the FASTA headers
+        # Clean the FASTA headers and save to the final fasta file
         echo "Cleaning headers in ${fasta_file}"
-        awk '/^>/ {gsub(/[|\\/\\-]/, "_", $0)} {print}' "$fasta_file" > "$clean_fasta"
+        awk '/^>/ {header=$0; gsub(/[|\/\-]/, "_", header); print header} !/^>/ {print}' "$fasta_file" > "$final_fasta"
 
-        # Compress the cleaned fasta file
-        echo "Compressing ${clean_fasta} to ${compressed_fasta}"
-        gzip -c "$clean_fasta" > "$compressed_fasta"
+        # Ensure the final fasta file has a proper FASTA header
+        if ! grep -q "^>" "$final_fasta"; then
+        echo "ERROR!!! The file ${final_fasta} does not have a proper FASTA header. Adding default headers."
+
+        # Add default headers to each sequence
+        awk 'BEGIN {header_num=1} !/^>/ {print ">sequence_" header_num "\n" $0; header_num++} /^>/ {print}' "$final_fasta" > "${final_fasta}.tmp"
+        mv "${final_fasta}.tmp" "$final_fasta"
+        echo "Default headers added to ${final_fasta}"
+        else
+            echo "The file ${final_fasta} has been cleaned and is in proper FASTA format"
+
+        fi
+
+        # Compress the final fasta file
+        echo "Compressing ${final_fasta} to ${compressed_fasta}"
+        bgzip -c "$final_fasta" > "$compressed_fasta"
 
         # Index the compressed fasta file
         echo "Indexing ${compressed_fasta}"
         samtools faidx "$compressed_fasta"
 
         # Echo fasta file path for the current sample
-        echo "contigs_fasta for ${sample}: ${clean_fasta}"
+        echo "contigs_fasta for ${sample}: ${final_fasta}"
 
-         # Run the Prokka command on the current file
-        echo "Processing Prokka for ${sample}: ${clean_fasta}"
-        prokka "$clean_fasta" \
+        # Run the Prokka command on the current file
+        echo "Processing Prokka for ${sample}: ${final_fasta}"
+        prokka "$final_fasta" \
             --outdir "$output_path" \
             --cpus 3 \
             --mincontiglen 200 \
@@ -82,7 +96,7 @@ for gz_file in "${FASTA_DIR}"/*.fasta.gz; do
             --addgenes \
             --addmrna \
             --locustag MPXV \
-            --genus "Mpox" \
+            --genus "Mpox virus" \
             --proteins "$protein_db" \
             --usegenus \
             --compliant \
@@ -90,18 +104,11 @@ for gz_file in "${FASTA_DIR}"/*.fasta.gz; do
             --force \
             --debug
 
-        # Clean up all files except the cleaned, compressed, and indexed files
+        # Clean up all temp files
         rm -f "$temp_fasta"
-        rm -f "$fasta_file"
-        rm -f "$gz_file"
 
     else
         echo "ERROR!!! fasta.gz file not found: ${gz_file}"
     fi
 done
-
-# Remove any remaining old files in the input directory
-rm -f "${FASTA_DIR}"/*.fasta
-rm -f "${FASTA_DIR}"/*.gzi
-rm -f "${FASTA_DIR}"/*.fai
 ```
