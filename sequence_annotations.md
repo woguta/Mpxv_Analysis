@@ -71,8 +71,25 @@ for gz_file in "${FASTA_DIR}"/*.fasta.gz; do
         # Echo fasta file path for the current sample
         echo "contigs_fasta for ${sample}: ${clean_fasta}"
 
-        # Run the Prokka command on the current file
+         # Run the Prokka command on the current file
         echo "Processing Prokka for ${sample}: ${clean_fasta}"
+        prokka "$clean_fasta" \
+            --outdir "$output_path" \
+            --cpus 3 \
+            --mincontiglen 200 \
+            --kingdom Viruses \
+            --centre WHO \
+            --addgenes \
+            --addmrna \
+            --locustag MPXV \
+            --genus "Mpox" \
+            --proteins "$protein_db" \
+            --usegenus \
+            --compliant \
+            --rfam \
+            --force \
+            --debug
+
         # Clean up all files except the cleaned, compressed, and indexed files
         rm -f "$temp_fasta"
         rm -f "$fasta_file"
