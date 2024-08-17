@@ -1,6 +1,6 @@
 # Prepare the sequences
 
-1. After downloading ssequnces from the database or have made your seqs reeady for analysis, further preapre them for ease of use
+1. Clean the seqs for easy of use
 
 ```
 #!/bin/bash
