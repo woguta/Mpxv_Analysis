@@ -1,6 +1,8 @@
 # Mpxv_Anlaysis
 This an analaysi of Mpox virus sequences
 
+## After downloading ssequnces from the database or have made your seqs reeady for analysis, further preapre them for ease of use
+
 ```
 #!/bin/bash
 
