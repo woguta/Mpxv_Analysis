@@ -113,7 +113,7 @@ for gz_file in "${FASTA_DIR}"/*.fasta.gz; do
     fi
 done
 ```
-2. Concatenate prokka data of interest (gffs, gbks, gbfs & faas) per sample in each samples own folder
+2. Concatenate & group prokka data of interest (gffs, gbks, gbfs & faas) per sample in each samples own folder
 
 ```
 #!/bin/bash
@@ -212,7 +212,7 @@ done
 
 echo "Concatenation for all samples is complete!"
 ```
-3. Concatenate prokka data gffs, gbks, gbfs & faas in their own folders
+3. Concatenate & group prokka data gffs, gbks, gbfs & faas in their own folders eg. groupind all gbks for all samples in gbk_data folder
 
 ```
 #!/bin/bash
