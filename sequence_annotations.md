@@ -594,7 +594,7 @@ extracted_dir="./mpox_results/extracted_variants_snippy"
 # Create output directory for extracted variants
 mkdir -p "$extracted_dir"
 
-# Run SnpSift for variant extraction #barcode_1.filtered.snpEff.genes.txt
+# Run SnpSift for variant extraction #${sample}.filtered.snpEff.genes.txt
 echo "Performing variant extraction..."
 for snpeff_file in "$snpeff_dir"/*.snpEff.vcf.gz; do
     sample_name=$(basename "${snpeff_file}" .snpEff.vcf.gz)
