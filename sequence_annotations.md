@@ -311,3 +311,85 @@ done
 
 echo "Concatenation for all samples is complete!"
 ```
+4. Renaming gff, gbk, gbf and faa files with corrected header inside out
+
+```
+#!/bin/bash
+
+# Define directories
+WORK_DIR="/home/woguta/mpox_files/mpox_results/prokka_data"
+GFF_DIR="${WORK_DIR}/prokka_gff"
+GBK_DIR="${WORK_DIR}/prokka_gbk"
+GBF_DIR="${WORK_DIR}/prokka_gbf"
+
+# Loop through each sample in the GFF_DIR
+for gff_file in "${GFF_DIR}"/*.gff; do
+  # Extract the sample name from the file name
+  sample_name=$(basename "${gff_file}" .gff) 
+  gbk_file="${GBK_DIR}/${sample_name}.gbk"
+  gbf_file="${GBF_DIR}/${sample_name}.gbf"
+  
+  # Function to check files
+  check_file() {
+    local file=$1
+    if [ ! -f "${file}" ]; then
+      echo "Error: ${file} not found!"
+    elif [ ! -s "${file}" ]; then
+      echo "Error: ${file} is empty!"
+    elif [ ! -r "${file}" ]; then
+      echo "Error: ${file} is unreadable!"
+    else
+      echo "${file} is present and readable."
+      return 0
+    fi
+    return 1
+  }
+
+  # Function to process GFF file
+  process_gff() {
+    local file=$1
+    local tmp_file=$(mktemp)
+    while IFS= read -r line; do
+      if [[ $line == "##sequence-region"* ]]; then
+        echo "##sequence-region ${sample_name}" >> "${tmp_file}"
+      elif [[ $line == *"gnl|WHO|MPXV_1"* ]]; then
+        echo "${line//gnl|WHO|MPXV_1/gnl|WHO|${sample_name}}" >> "${tmp_file}"
+      else
+        echo "${line}" >> "${tmp_file}"
+      fi
+    done < "${file}"
+    mv "${tmp_file}" "${file}"
+    echo "Updated ${file} with sample name ${sample_name}."
+  }
+
+  # Function to process GBK and GBF files
+  process_gbk_gbf() {
+    local file=$1
+    local tmp_file=$(mktemp)
+    while IFS= read -r line; do
+      if [[ $line == LOCUS* ]]; then
+        echo "${line/MPXV_1/${sample_name}}" >> "${tmp_file}"
+      else
+        echo "${line}" >> "${tmp_file}"
+      fi
+    done < "${file}"
+    mv "${tmp_file}" "${file}"
+    echo "Updated ${file} with sample name ${sample_name}."
+  }
+
+  # Check and process GFF file
+  if check_file "${gff_file}"; then
+    process_gff "${gff_file}"
+  fi
+
+  # Check and process GBK file
+  if check_file "${gbk_file}"; then
+    process_gbk_gbf "${gbk_file}"
+  fi
+
+  # Check and process GBF file
+  if check_file "${gbf_file}"; then
+    process_gbk_gbf "${gbf_file}"
+  fi
+done
+```
