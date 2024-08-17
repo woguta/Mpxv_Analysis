@@ -30,7 +30,7 @@ if [ ! -e "${OUT_DIR}" ]; then
   mkdir -p "${OUT_DIR}"
 fi
 
-# Reference protein fasta in gb format
+# Reference protein fasta in gbk format
 protein_db="${WORK_DIR}/mpox_refseqs/Mpox_ref_NC_063383.1.gb"
 
 echo "Running Prokka"
@@ -113,7 +113,7 @@ for gz_file in "${FASTA_DIR}"/*.fasta.gz; do
     fi
 done
 ```
-2. Concatenate & group prokka data of interest (gffs, gbks, gbfs & faas) per sample in each samples own folder
+2. Concatenate & group prokka data of interest (gffs, gbks, gbfs & faas) per sample in each sample's own folder
 
 ```
 #!/bin/bash
@@ -212,7 +212,7 @@ done
 
 echo "Concatenation for all samples is complete!"
 ```
-3. Concatenate & group prokka data gffs, gbks, gbfs & faas in their own folders eg. groupind all gbks for all samples in gbk_data folder
+3. Concatenate & group prokka data gffs, gbks, gbfs & faas in their own folders eg. grouping all gbks from all samples in one gbk_data folder
 
 ```
 #!/bin/bash
@@ -311,7 +311,7 @@ done
 
 echo "Concatenation for all samples is complete!"
 ```
-4. Renaming gff, gbk and gbf files with corrected header inside out
+4. Renaming gff, gbk and gbf files with correct header inside out
 
 ```
 #!/bin/bash
@@ -395,7 +395,7 @@ done
 ```
 
 ## B. Variants calling
-Involves using snippy and variants annotation/prediction using snpeff, extraction using snpsift
+Involves using snippy and variants annotation/prediction using snpeff, extraction using snpsift and R
 
 1. Variants calling using snippy
 
