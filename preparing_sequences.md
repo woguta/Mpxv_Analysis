@@ -1,7 +1,6 @@
 # Prepare the sequences
 
 1. Clean the seqs for easy of use
-
 ```
 #!/bin/bash
 
@@ -45,9 +44,7 @@ else
     echo "The file ${output_file} has been cleaned and is in proper FASTA format"
 fi
 ```
-
 2. Split the combined fasta files
-
 ```
 #!/bin/bash
 
