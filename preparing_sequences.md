@@ -88,7 +88,7 @@ rm -f *.fasta.*
 
 3. Copying files
 
-i. From local comp to remote server outside hpc
+i. From local comp to remote server (outside hpc)
 ```
 scp -r ./mpox_files/mpox_august/fasta_files/* woguta@hpc.server.org:./mpox_data/mpox_fasta
 ```
@@ -96,7 +96,7 @@ ii. From remote server hpc to var/scartch for analysis (inside hpc)
 ```
 cp -r ./mpox_data/mpox_fasta/* /var/scratch/woguta/viral_genomes/mpox_data/mpox_fasta
 ```
-iii. From var/scratch to hpc homage (inside hpc) /var/scratch/woguta/viral_genomes/mpox_data
+iii. From var/scratch to hpc homepage (inside hpc) /var/scratch/woguta/viral_genomes/mpox_data
 ```
 cp -r /var/scratch/woguta/viral_genomes/mpox_data/mpox_results/prokka_data/ ~/mpox_data/
 ```
