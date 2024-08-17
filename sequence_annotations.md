@@ -620,3 +620,59 @@ done
 
 echo "SnpSift variant extraction complete"
 ```
+3. Extract the variants for analysis and visualization in R
+
+```
+#!/usr/bin/Rscript
+
+# Load necessary modules
+module purge
+module load R/4.3
+
+# Open R console/studio in the terminal
+R
+
+# Remove all objects saved in R workspace
+rm(list = ls())
+
+# Set the input directory where the sample directories are located
+input_dir <- "./mpox_results/extracted_variants_snippy"
+
+# Get a list of all sample directories in the input directory
+file_list <- list.files(input_dir, pattern = "\\.snpsift\\.txt", full.names = TRUE)
+
+# Create an empty data frame to store the aggregated data
+agg_df <- data.frame()
+
+# Loop over each annotated result file
+for (file in file_list) {
+  # Read the annotated data from the file
+  annotated_data <- read.delim(file, sep = "\t", header = TRUE)
+
+  # Skip sample if no annotated data was found
+  if (nrow(annotated_data) == 0) {
+    next
+  }
+
+  # Extract the sample name from the file path
+  sample_name <- sub("\\.snpsift\\.txt$", "", basename(file))
+
+  # Add the sample name as a column in the data frame
+  annotated_data$sample_name <- sample_name
+
+  # Append the data to the aggregated data frame
+  agg_df <- rbind(agg_df, annotated_data)
+}
+
+# Set the output file name
+output_file <- "combined_annotated_data.csv"
+
+# Check if the aggregated data frame is empty
+if (nrow(agg_df) > 0) {
+  # Write the aggregated data to a CSV file
+  write.csv(agg_df, file = output_file, row.names = FALSE)
+  cat("Variant extraction complete. Data saved to:", output_file, "\n")
+} else {
+  cat("No data extracted. Output file not created.\n")
+}
+```
