@@ -113,7 +113,7 @@ for gz_file in "${FASTA_DIR}"/*.fasta.gz; do
     fi
 done
 ```
-2. Concatenate prokka data
+2. Concatenate prokka data (gff, gbk, gbf & faa) per sample in its own folder
 
 ```
 #!/bin/bash
@@ -192,6 +192,105 @@ for sample_dir in "${PROKKA_DIR}"/*; do
   cat_gbk="${OUT}/${sample_name}.gbk"
   cat_gbf="${OUT}/${sample_name}.gbf"
   cat_faa="${OUT}/${sample_name}.faa"
+
+  echo "Concatenating files for ${sample_name}:"
+  echo "Gff file: ${gff_file}"
+  echo "Gbk file: ${gbk_file}"
+  echo "Gbf file: ${gbf_file}"
+  echo "Faa file: ${faa_file}"
+
+  cat "${gff_file}" > "${cat_gff}"
+  cat "${gbk_file}" > "${cat_gbk}"
+  cat "${gbf_file}" > "${cat_gbf}"
+  cat "${faa_file}" > "${cat_faa}"
+  echo "Concatenating is complete for ${sample_name}"
+  echo "Concatenated assembly: ${cat_gff}"
+  echo "Concatenated assembly: ${cat_gbk}"
+  echo "Concatenated assembly: ${cat_gbf}"
+  echo "Concatenated assembly: ${cat_faa}"
+done
+
+echo "Concatenation for all samples is complete!"
+```
+3. Concatenate prokka data gffs, gbks, gbfs & faas in their own folders
+
+```
+#!/bin/bash
+
+# Define directories
+WORK_DIR="/home/woguta/mpox_files"
+PROKKA_DIR="${WORK_DIR}/mpox_results/prokka_data"
+
+# Add a debug statement to check PPROKKA_DIR
+echo "PROKKA_DIR: ${PROKKA_DIR}"
+
+# Iterate over subdirectories in PROKKA_DIR
+for sample_dir in "${PROKKA_DIR}"/*; do
+  if [ ! -d "${sample_dir}" ]; then
+    continue
+  fi
+
+  # Extract the sample name from the directory name
+  sample_name=$(basename "${sample_dir}") 
+  gff_file="${sample_dir}/${sample_name}.gff"
+  gbk_file="${sample_dir}/${sample_name}.gbk"
+  gbf_file="${sample_dir}/${sample_name}.gbf"
+  faa_file="${sample_dir}/${sample_name}.faa"
+
+  #Check the  files of interests #gff #gbk #gbf #faa
+  if [ ! -f "${gff_file}" ]; then
+    echo "Error: ${gff_file} not found!"
+  elif [ ! -s "${gff_file}" ]; then
+    echo "Error: ${gff_file} is empty!"
+  elif [ ! -r "${gff_file}" ]; then
+    echo "Error: ${gff_file} is unreadable!"
+  else
+    echo "${gff_file} is present and readable."
+  fi
+
+  if [ ! -f "${gbk_file}" ]; then
+    echo "Error: ${gbk_file} not found!"
+  elif [ ! -s "${gbk_file}" ]; then
+    echo "Error: ${gbk_file} is empty!"
+  elif [ ! -r "${gbk_file}" ]; then
+    echo "Error: ${gbk_file} is unreadable!"
+  else
+    echo "${gbk_file} is present and readable."
+  fi
+
+  if [ ! -f "${gbf_file}" ]; then
+    echo "Error: ${gbf_file} not found!"
+  elif [ ! -s "${gbf_file}" ]; then
+    echo "Error: ${gbf_file} is empty!"
+  elif [ ! -r "${gbf_file}" ]; then
+    echo "Error: ${gbf_file} is unreadable!"
+  else
+    echo "${gbf_file} is present and readable."
+  fi
+
+  if [ ! -f "${faa_file}" ]; then
+    echo "Error: ${faa_file} not found!"
+  elif [ ! -s "${faa_file}" ]; then
+    echo "Error: ${faa_file} is empty!"
+  elif [ ! -r "${faa_file}" ]; then
+    echo "Error: ${faa_file} is unreadable!"
+  else
+    echo "${faa_file} is present and readable."
+  fi
+
+  OUT="${PROKKA_DIR}/prokka_gff"
+  OUT1="${PROKKA_DIR}/prokka_gbk"
+  OUT2="${PROKKA_DIR}/prokka_gbf"
+  OUT3="${PROKKA_DIR}/prokka_faa"
+  mkdir -p "${OUT}"
+  mkdir -p "${OUT1}"
+  mkdir -p "${OUT2}"
+  mkdir -p "${OUT3}"
+
+  cat_gff="${OUT}/${sample_name}.gff"
+  cat_gbk="${OUT1}/${sample_name}.gbk"
+  cat_gbf="${OUT2}/${sample_name}.gbf"
+  cat_faa="${OUT3}/${sample_name}.faa"
 
   echo "Concatenating files for ${sample_name}:"
   echo "Gff file: ${gff_file}"
