@@ -1,7 +1,7 @@
 # Sequence Annotations
 
 ## A. Prokka
-1. Predict genes based ref genome gff
+1. Predict genes based on ref genome gff
 ```
 #!/usr/bin/bash -l
 #SBATCH -p batch
