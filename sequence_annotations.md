@@ -311,7 +311,7 @@ done
 
 echo "Concatenation for all samples is complete!"
 ```
-4. Renaming gff, gbk, gbf and faa files with corrected header inside out
+4. Renaming gff, gbk and gbf files with corrected header inside out
 
 ```
 #!/bin/bash
