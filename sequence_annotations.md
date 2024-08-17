@@ -430,7 +430,7 @@ if [ ! -e "${OUT_DIR}" ]; then
   mkdir -p "${OUT_DIR}"
 fi
 
-# Run snippy
+# Step 1: Run snippy
 for fasta_file in "${DATA_DIR}"/*.fasta; do
     sample=$(basename "${fasta_file}" .fasta)
 
@@ -464,7 +464,7 @@ for fasta_file in "${DATA_DIR}"/*.fasta; do
     fi
 done
 
-# run snippy-core
+# Step 2: Run snippy-core
 dirs=()
 for d in "${OUT_DIR}"/*; do
     if [ -d "${d}" ] && [ "${d}" != 'reference' ]; then
@@ -515,7 +515,7 @@ cp -rf $REF_DIR/Mpox_ref_NC_063383.1.gff3 ./database/snpEff/data/NC063383/genes.
 cp -rf $REF_DIR/Mpox_ref_NC_063383.1.fasta ./database/snpEff/data/NC063383/sequences.fa
 echo -e "# Mpox viral genome, version MpoxNC063383\nNC063383.genome: NC063383" > ./database/snpEff/data/NC063383/snpEff.config
 
-#Build the database
+# Step 3: Build the database
 java -Xmx4g -jar /export/apps/snpeff/4.1g/snpEff.jar build \
         -config ./database/snpEff/data/NC063383/snpEff.config \
         -dataDir ./../ \
@@ -526,7 +526,7 @@ java -Xmx4g -jar /export/apps/snpeff/4.1g/snpEff.jar build \
 reference_prefix="${output_dir}/NC063383/NC063383"
 mkdir -p "${reference_prefix}"
 
-#Step 5: Compress the filtered VCF files #bgzip -c file.vcf > file.vcf.gz
+#Step 4: Compress the filtered VCF files #bgzip -c file.vcf > file.vcf.gz
 echo "Compressing filtered VCF files..."
 for sample_dir in "${SNIPPY_DIR}"/*; do
     sample_name=$(basename "${sample_dir}")
@@ -535,7 +535,7 @@ for sample_dir in "${SNIPPY_DIR}"/*; do
     bgzip "${filtered_vcf}"
 done
 
-# Step 6: Index the filtered.vcf.gz VCF files
+# Step 5: Index the filtered.vcf.gz VCF files
 echo "Indexing filtered VCF files..."
 for sample_dir in "${SNIPPY_DIR}"/*; do
     sample_name=$(basename "${sample_dir}")
@@ -544,7 +544,7 @@ for sample_dir in "${SNIPPY_DIR}"/*; do
     bcftools index -c --threads 4 "${filtered_vcf_gz}"
 done
 
-# Step 7: Variant Annotation with GFF file
+# Step 6: Variant Annotation with GFF file
 # Define input files and directories
 vcf_dir="${SNIPPY_DIR}"
 annotated_dir="./mpox_results/annotated_mpox_variants_snippy"
@@ -569,7 +569,7 @@ for sample_dir in "${SNIPPY_DIR}"/*; do
 
 echo "Variant annotation complete."
 
-# Step 8: Rename summary.html and genes.txt and zip vcf files
+# Step 7: Rename summary.html and genes.txt and zip vcf files
 mv ./snpEff_summary.html "${annotated_dir}/${sample_name}.snpEff.summary.html"
 mv ./snpEff_genes.txt "${annotated_dir}/${sample_name}.snpEff.genes.txt"
 
@@ -586,7 +586,7 @@ echo "Variant summary renaming, compressing complete."
 
 done
 
-# Step 9: Variant Extraction with SnpSift
+# Step 8: Variant Extraction with SnpSift
 # Define input files and directories
 snpeff_dir="${annotated_dir}"
 extracted_dir="./mpox_results/extracted_variants_snippy"
