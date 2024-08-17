@@ -86,6 +86,7 @@ rm -f *pxV_*.fasta
 rm -f *.fasta.*
 ```
 3. Copying files
+
 a. From local comp to remote server outside hpc
 ```
 scp -r ./mpox_files/mpox_august/fasta_files/* woguta@hpc.server.org:./mpox_data/mpox_fasta
