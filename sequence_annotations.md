@@ -1,6 +1,7 @@
 # Sequence Annotations
 
-## A. Prokka: Predict genes based ref genome gff
+## A. Prokka
+1. Predict genes based ref genome gff
 ```
 #!/usr/bin/bash -l
 #SBATCH -p batch
@@ -111,4 +112,103 @@ for gz_file in "${FASTA_DIR}"/*.fasta.gz; do
         echo "ERROR!!! fasta.gz file not found: ${gz_file}"
     fi
 done
+```
+2. Concatenate prokka data
+
+```
+#!/bin/bash
+
+# Define directories
+WORK_DIR="/var/scratch/${USER}/viral_genomes/mpox_data"
+OUTPUT_DIR="${WORK_DIR}/mpox_results/prokka_data"
+PROKKA_DIR="${WORK_DIR}/mpox_results/mpox_prokka"
+
+# Make the output directory if it doesn't exist
+if [ ! -e "${OUTPUT_DIR}" ]; then
+  mkdir -p "${OUTPUT_DIR}"
+fi
+
+# Add a debug statement to check PLASMIDS_DIR
+echo "PROKKA_DIR: ${PROKKA_DIR}"
+
+# Iterate over subdirectories in GFF_DIR
+for sample_dir in "${PROKKA_DIR}"/*; do
+  if [ ! -d "${sample_dir}" ]; then
+    continue
+  fi
+
+  # Extract the sample name from the directory name
+  sample_name=$(basename "${sample_dir}") 
+  gff_file="${sample_dir}/PROKKA_07132024.gff"
+  gbk_file="${sample_dir}/PROKKA_07132024.gbk"
+  gbf_file="${sample_dir}/PROKKA_07132024.gbf"
+  faa_file="${sample_dir}/PROKKA_07132024.faa"
+
+  #Check the  files of interests #gff #gbk #gbf #faa
+  if [ ! -f "${gff_file}" ]; then
+    echo "Error: ${gff_file} not found!"
+  elif [ ! -s "${gff_file}" ]; then
+    echo "Error: ${gff_file} is empty!"
+  elif [ ! -r "${gff_file}" ]; then
+    echo "Error: ${gff_file} is unreadable!"
+  else
+    echo "${gff_file} is present and readable."
+  fi
+
+  if [ ! -f "${gbk_file}" ]; then
+    echo "Error: ${gbk_file} not found!"
+  elif [ ! -s "${gbk_file}" ]; then
+    echo "Error: ${gbk_file} is empty!"
+  elif [ ! -r "${gbk_file}" ]; then
+    echo "Error: ${gbk_file} is unreadable!"
+  else
+    echo "${gbk_file} is present and readable."
+  fi
+
+  if [ ! -f "${gbf_file}" ]; then
+    echo "Error: ${gbf_file} not found!"
+  elif [ ! -s "${gbf_file}" ]; then
+    echo "Error: ${gbf_file} is empty!"
+  elif [ ! -r "${gbf_file}" ]; then
+    echo "Error: ${gbf_file} is unreadable!"
+  else
+    echo "${gbf_file} is present and readable."
+  fi
+
+  if [ ! -f "${faa_file}" ]; then
+    echo "Error: ${faa_file} not found!"
+  elif [ ! -s "${faa_file}" ]; then
+    echo "Error: ${faa_file} is empty!"
+  elif [ ! -r "${faa_file}" ]; then
+    echo "Error: ${faa_file} is unreadable!"
+  else
+    echo "${faa_file} is present and readable."
+  fi
+
+  OUT="${OUTPUT_DIR}/${sample_name}"
+  mkdir -p "${OUT}"
+
+  cat_gff="${OUT}/${sample_name}.gff"
+  cat_gbk="${OUT}/${sample_name}.gbk"
+  cat_gbf="${OUT}/${sample_name}.gbf"
+  cat_faa="${OUT}/${sample_name}.faa"
+
+  echo "Concatenating files for ${sample_name}:"
+  echo "Gff file: ${gff_file}"
+  echo "Gbk file: ${gbk_file}"
+  echo "Gbf file: ${gbf_file}"
+  echo "Faa file: ${faa_file}"
+
+  cat "${gff_file}" > "${cat_gff}"
+  cat "${gbk_file}" > "${cat_gbk}"
+  cat "${gbf_file}" > "${cat_gbf}"
+  cat "${faa_file}" > "${cat_faa}"
+  echo "Concatenating is complete for ${sample_name}"
+  echo "Concatenated assembly: ${cat_gff}"
+  echo "Concatenated assembly: ${cat_gbk}"
+  echo "Concatenated assembly: ${cat_gbf}"
+  echo "Concatenated assembly: ${cat_faa}"
+done
+
+echo "Concatenation for all samples is complete!"
 ```
