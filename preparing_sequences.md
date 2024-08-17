@@ -46,3 +46,45 @@ else
 fi
 ```
 
+2. Split the combined fasta files
+
+```
+#!/bin/bash
+
+# Define variables
+WORK_DIR=~/mpox_files
+INPUT_DIR="$WORK_DIR/mpox_august"
+FASTA_DIR="$WORK_DIR/mpox_august/fasta_files"
+INPUT_FILE="$INPUT_DIR/mpox_433_all.clean.fasta"
+
+# Make fasta dir if it doesnt exists
+mkdir -p "$FASTA_DIR"
+
+# Display a message indicating splitting of FASTA files
+echo "Splitting the combined FASTA file..."
+
+# Change directory to the input directory
+cd "$INPUT_DIR" || exit
+
+# Extract original filenames without renaming
+awk '/^>/{filename = substr($0, 2); gsub(/[\[\]\/\\&:\(\)\{\}<>!@#\$%\^*+=`|~'"'"';,?"'"'"']/, "_", filename); print > (filename ".fasta"); next} {print >> (filename ".fasta")}' "$INPUT_FILE"
+
+# Compress each FASTA file using bgzip and create index files using samtools faidx
+for fasta_file in *.fasta; do
+    bgzip "$fasta_file"  # Compress FASTA file
+    samtools faidx "${fasta_file}.gz"  # Create index file
+done
+
+# DeCompress each FASTA file using gunzip 
+for gz_file in *.gz; do
+    gunzip -k "$gz_file"  # deCompress to have FASTA file
+done
+
+# Move specific files to fasta dir
+mv -f *pxV_*.fasta "$FASTA_DIR"
+mv -f *.fasta.* "$FASTA_DIR"
+
+# Clean folder moving/copying
+rm -f *pxV_*.fasta
+rm -f *.fasta.*
+```
