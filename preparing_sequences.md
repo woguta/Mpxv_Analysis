@@ -88,3 +88,33 @@ mv -f *.fasta.* "$FASTA_DIR"
 rm -f *pxV_*.fasta
 rm -f *.fasta.*
 ```
+3. Copying files
+a. From local comp to remote server outside hpc
+```
+scp -r ./mpox_files/mpox_august/fasta_files/* woguta@hpc.server.org:./mpox_data/mpox_fasta
+```
+b. From remote server hpc to var/scartch for analysis (inside hpc)
+```
+cp -r ./mpox_data/mpox_fasta/* /var/scratch/woguta/viral_genomes/mpox_data/mpox_fasta
+```
+c. From var/scratch to hpc homage (inside hpc) /var/scratch/woguta/viral_genomes/mpox_data
+```
+cp -r /var/scratch/woguta/viral_genomes/mpox_data/mpox_results/prokka_data/ ~/mpox_data/
+```
+```
+cp -r /var/scratch/woguta/viral_genomes/mpox_data/mpox_fasta/ ~/mpox_data/mpox_fasta
+```
+```
+cp -r /var/scratch/woguta/viral_genomes/mpox_data/combined_annotated_data.csv ~/mpox_data/
+```
+
+d. From remote server to homepage comp/laptop (outside hpc)
+```
+scp -r woguta@hpc.server.org:~/mpox_data/prokka_data/ ~/mpox_files/mpox_results/
+```
+```
+scp -r woguta@hpc.server.org:~/mpox_data/mpox_fasta/ ~/mpox_files/mpoxv_pangenome_analysis/fasta_files/
+```
+```
+scp -r woguta@hpc.server.org:~/mpox_data/combined_annotated_data.csv ~/mpox_files/mpox_results/
+```
