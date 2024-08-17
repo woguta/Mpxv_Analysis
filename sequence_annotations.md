@@ -393,3 +393,96 @@ for gff_file in "${GFF_DIR}"/*.gff; do
   fi
 done
 ```
+
+## B. Variants calling
+Involves using snippy and variants annotation/prediction using snpeff, extraction using snpsift
+
+1. Variants calling using snippy
+
+```
+#!/usr/bin/bash -l
+#SBATCH -p batch
+#SBATCH -J Snippy_Mpox
+#SBATCH -n 4
+#SBATCH --mem=8G
+
+# Exit with error reporting
+set -e
+set -x
+
+# load required modules
+module purge
+module load perl/5.22.3
+module load snippy/4.6.0
+module load python/3.9
+
+# Directories path
+WORK_DIR="/var/scratch/${USER}/viral_genomes/mpox_data"
+DATA_DIR="${WORK_DIR}/mpox_fasta"
+REF_DIR="${WORK_DIR}/mpox_refseqs"
+OUT_DIR="${WORK_DIR}/mpox_results/mpox_snippy"
+
+# Define ref
+reference="${REF_DIR}/Mpox_ref_NC_063383.1.fasta"
+
+# Make directories
+if [ ! -e "${OUT_DIR}" ]; then
+  mkdir -p "${OUT_DIR}"
+fi
+
+# Run snippy
+for fasta_file in "${DATA_DIR}"/*.fasta; do
+    sample=$(basename "${fasta_file}" .fasta)
+
+    # create output directory for every sample
+    OUT="${OUT_DIR}/${sample}"
+
+    if [ ! -e "${OUT}" ]; then
+        mkdir -p "${OUT}"
+    fi
+
+    vcf="${OUT}/${sample}.vcf"
+    bed="${OUT}/${sample}.bed"
+    gff="${OUT}/${sample}.gff"
+    csv="${OUT}/${sample}.csv"
+    html="${OUT}/${sample}.html"
+
+    if [ ! -f "${vcf}" ] && [ ! -f "${bed}" ] && [ ! -f "${gff}" ] && [ ! -f "${csv}" ] && [ ! -f "${html}" ]; then
+        echo -e "Calling variants on sample:\t${sample}; Fasta file: ${fasta_file}"
+        snippy \
+            --cpus 4 \
+            --ram 8 \
+            --prefix "${sample}" \
+            --cleanup \
+            --mapqual 60 \
+            --basequal 15 \
+            --mincov 10 \
+            --force \
+            --outdir "${OUT}" \
+            --ref "${reference}" \
+            --ctgs "${fasta_file}"
+    fi
+done
+
+# run snippy-core
+dirs=()
+for d in "${OUT_DIR}"/*; do
+    if [ -d "${d}" ] && [ "${d}" != 'reference' ]; then
+        dirs+=("${d}")
+    fi
+done
+
+DIRS=$(printf '%s ' "${dirs[@]}")
+echo "${DIRS}"
+
+CORE_DIR="${OUT_DIR}/snippy-core"
+
+if [ ! -e "${CORE_DIR}" ]; then
+    mkdir -p "${CORE_DIR}"
+fi
+
+cd "${CORE_DIR}"
+echo -e "Running snippy-core"
+snippy-core --ref "${reference}" --prefix core ${DIRS}
+```
+
