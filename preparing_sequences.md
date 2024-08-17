@@ -1,6 +1,6 @@
 # Prepare the sequences
 
-1. Clean the seqs for easy of use
+1. Clean the seqs for easy use
 ```
 #!/bin/bash
 
@@ -86,7 +86,7 @@ rm -f *pxV_*.fasta
 rm -f *.fasta.*
 ```
 
-3. Copying files
+3. Copying files to and from local comp/laptop and hpc 
 
 i. From local comp to remote server (outside hpc)
 ```
