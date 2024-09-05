@@ -6,9 +6,9 @@
 
 # Input and output file paths
 work_dir=~/mpox_files
-input_dir="$work_dir/mpox_august"
-input_file="$input_dir/mpox_433_all.fasta"
-output_file="$input_dir/mpox_433_all.clean.fasta"
+input_dir="$work_dir/mpox_sept/mpox_fasta"
+input_file="$input_dir/mpox_all_480.fasta"
+output_file="$input_dir/mpox_all_480_clean.fasta"
 
 # Remove sequence length from headers and write to output file
 sed 's/\/[0-9]\+-[0-9]\+//' "$input_file" > "${output_file}.tmp1"
@@ -46,6 +46,7 @@ fi
 ```
 2. Split the combined fasta files
 ```
+#!/bin/bash
 
 # Define variables
 WORK_DIR=~/mpox_files
