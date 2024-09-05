@@ -46,15 +46,15 @@ fi
 ```
 2. Split the combined fasta files
 ```
-#!/bin/bash
 
 # Define variables
 WORK_DIR=~/mpox_files
-INPUT_DIR="$WORK_DIR/mpox_august"
-FASTA_DIR="$WORK_DIR/mpox_august/fasta_files"
-INPUT_FILE="$INPUT_DIR/mpox_433_all.clean.fasta"
+INPUT_DIR="$WORK_DIR/mpox_sept/mpox_fasta"
+FASTA_DIR="$WORK_DIR/mpox_sept/fasta_files"
+INPUT_FILE="$INPUT_DIR/mpox_all_480_clean.fasta"
 
-# Make fasta dir if it doesnt exists
+# Create directories
+echo "Creating directories..."
 mkdir -p "$FASTA_DIR"
 
 # Display a message indicating splitting of FASTA files
@@ -64,17 +64,12 @@ echo "Splitting the combined FASTA file..."
 cd "$INPUT_DIR" || exit
 
 # Extract original filenames without renaming
-awk '/^>/{filename = substr($0, 2); gsub(/[\[\]\/\\&:\(\)\{\}<>!@#\$%\^*+=`|~'"'"';,?"'"'"']/, "_", filename); print > (filename ".fasta"); next} {print >> (filename ".fasta")}' "$INPUT_FILE"
-
-# Compress each FASTA file using bgzip and create index files using samtools faidx
+awk '/^>/{filename = substr($0, 2); gsub(/[\[\]\/\\&:\(\)\{\}<>!@#\$%\^*+=`|~'"'"';,?"'"'"']/, "_", filename); print > (filename ".fasta"); next} {print >> (filename ".fas>
+# Compress each FASTA file using bgzip, create index using samtools faidx & unzip again
 for fasta_file in *.fasta; do
     bgzip "$fasta_file"  # Compress FASTA file
     samtools faidx "${fasta_file}.gz"  # Create index file
-done
-
-# DeCompress each FASTA file using gunzip 
-for gz_file in *.gz; do
-    gunzip -k "$gz_file"  # deCompress to have FASTA file
+    gunzip -k "${fasta_file}.gz"  # Unzip the fasta files
 done
 
 # Move specific files to fasta dir
@@ -84,7 +79,6 @@ mv -f *.fasta.* "$FASTA_DIR"
 # Clean folder moving/copying
 rm -f *pxV_*.fasta
 rm -f *.fasta.*
-```
 
 3. Copying files to and from local comp/laptop and hpc 
 
