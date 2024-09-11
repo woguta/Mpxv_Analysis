@@ -80,6 +80,7 @@ mv -f *.fasta.* "$FASTA_DIR"
 # Clean folder moving/copying
 rm -f *pxV_*.fasta
 rm -f *.fasta.*
+```
 
 3. Copying files to and from local comp/laptop and hpc 
 
