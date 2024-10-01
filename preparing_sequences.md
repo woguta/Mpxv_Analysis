@@ -65,7 +65,7 @@ echo "Splitting the combined FASTA file..."
 cd "$INPUT_DIR" || exit
 
 # Extract original filenames without renaming
-awk '/^>/{filename = substr($0, 2); gsub(/[\[\]\/\\&:\(\)\{\}<>!@#\$%\^*+=`|~'"'"';,?"'"'"']/, "_", filename); print > (filename ".fasta"); next} {print >> (filename ".fas>
+awk '/^>/{filename = substr($0, 2); gsub(/[\[\]\/\\&:\(\)\{\}<>!@#\$%\^*+=`|~'"'"';,?"'"'"']/, "_", filename); print > (filename ".fasta"); next} {print >> (filename ".fasta")}' "$INPUT_FILE"
 # Compress each FASTA file using bgzip, create index using samtools faidx & unzip again
 for fasta_file in *.fasta; do
     bgzip "$fasta_file"  # Compress FASTA file
