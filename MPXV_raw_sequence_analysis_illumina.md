@@ -1,13 +1,13 @@
-# Mpox Sequence analysis from Illumina raw data (fastq files)
+## Mpox Sequence analysis from Illumina raw data (fastq files)
 The analysis pipeline follows raw sequence reads analysis from fastq to consensus fasta. Examples of tools
-### a. FastQC: Quality check of raw reads
-## b. Trimmomatic or fastp: Adapter trimming and quality filtering
-## c. hostile or bowtie or Kraken2 or BBMap (BBduk/BBsplit): Human read removal
-## d. Minimap2 or BWA mem: Mapping reads to references
-## e. Samtools: BAM processing and stats
-## f. Qualimap or Mosdepth: Mapping quality statistics
-## g. freebayes or snippy for calling variants
-## h. bcftools for consensus building
+a. FastQC: Quality check of raw reads
+b. Trimmomatic or fastp: Adapter trimming and quality filtering
+c. hostile or bowtie or Kraken2 or BBMap (BBduk/BBsplit): Human read removal
+d. Minimap2 or BWA mem: Mapping reads to references
+e. Samtools: BAM processing and stats
+f. Qualimap or Mosdepth: Mapping quality statistics
+g. freebayes or snippy for calling variants
+h. bcftools for consensus building
 
 ## 1. Modules needed
 ```
