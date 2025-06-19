@@ -211,3 +211,52 @@ cp -rf "$REF_DIR/Mpox_ref_NC_063383.1.fasta" "$REF_DIR/index" #Copy recursively 
 bwa index -p "$REF_DIR/index/Mpox_ref_NC_063383.1" \
         "$REF_DIR/index/Mpox_ref_NC_063383.1.fasta"
 ```
+Index the ref in refseqs directory using samtools
+
+```
+samtools faidx "$MPOX_REF1"
+```
+## Step 8: Map to MPXV reference using bwa and sort using samtools
+
+```
+bwa mem \
+    "$REF_DIR/index/Mpox_ref_NC_063383.1" \
+    "$FASTP_DIR/515_S13_trim_R1.fastq.gz" \
+    "$FASTP_DIR/515_S13_trim_R1.fastq.gz" | \
+    samtools sort -o "$BAM_DIR/515_S13.sorted.bam" 
+```
+Index the sorted bam alignment
+
+```
+samtools index -f "$BAM_DIR/515_S13.sorted.bam"
+```
+## Step 9: Variant calling using freebayes
+
+Save into genomic variant call format for concensus building
+
+```
+freebayes \
+    -p 1 \
+    -f "$MPOX_REF1" \
+    -F 0.2 \
+    -C 1 \
+    --pooled-continuous \
+    --min-coverage 10 \
+    --gvcf \
+    --gvcf-dont-use-chunk true \
+    "$BAM_DIR/515_S13.sorted.bam" > "$VCF_DIR/515_S13.gvcf"
+```
+# Save into vcf file for variant further studies
+
+``
+freebayes \
+    -p 1 \
+    -f "$MPOX_REF1" \
+    -F 0.2 \
+    -C 1 \
+    --pooled-continuous \
+    --min-coverage 10 \
+    --vcf \
+    --variant-input \
+    "$BAM_DIR/515_S13.sorted.bam" > "$VCF_DIR/515_S13.vcf"
+```
