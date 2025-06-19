@@ -17,7 +17,7 @@ Freebayes or snippy for calling variants
 
 bcftools for consensus building
 
-## Modules needed
+## Step 1: Modules needed
 
 Load modules if in hpc
 
@@ -51,7 +51,7 @@ conda install bioconda::mamba
 conda install -n base mamba
 conda create -c bioconda -c conda-forge -n squirrel -y squirrel
 ```
-OR for geeks
+For geeks
 
 ```
 #!/bin/bash
@@ -100,9 +100,59 @@ else
   echo "'squirrel' environment already exists."
 fi
 ```
-Activate installed modules/make them available outisde mynev envt/run inside myenv
+Activate installed modules/make them available outisde mynev envt/run inside myenv or outside
 
 ```
 echo 'export PATH=/home/woguta/anaconda3/envs/myenv/bin:$PATH' >> ~/.bashrc
 source ~/.bashrc
+```
+Make eg squirrel executable in base
+```
+chmod +x /home/woguta/anaconda3/envs/squirrel/bin/squirrel
+```
+Confirm
+```
+head -n 1 /home/woguta/anaconda3/envs/squirrel/bin/squirrel
+```
+## Step 2: Define and create directories
+
+Set directory paths
+```
+WORK_DIR="./mpox_files/mpox_sierra"
+FASTQ_DIR="${WORK_DIR}/fastq_files"
+FASTQC_DIR="${WORK_DIR}/fastqc_files"
+FASTP_DIR="${WORK_DIR}/fastp_trimmed"
+REF_DIR="${WORK_DIR}/refseqs"
+DATABASE_DIR="${WORK_DIR}/databases"
+OUT_DIR="${WORK_DIR}/results"
+HOST_FILTERED_DIR="${WORK_DIR}/host_filtered"
+BAM_DIR="${WORK_DIR}/mapped_bam"
+VCF_DIR="${WORK_DIR}/vcf"
+FASTA_DIR="${WORK_DIR}/fasta_files"
+MPOX_REF1="${REF_DIR}/Mpox_ref_NC_063383.1.fasta"
+MPOX_REF2="${REF_DIR}/mpox_ref_NC_003310.1.fasta"
+```
+Create directories
+```
+mkdir -p "$FASTQC_DIR" "$FASTA_DIR" "$REF_DIR" "$DATABASE_DIR" "$OUT_DIR" "$FASTP_DIR" "$TRIMMED_DIR" "$HOST_FILTERED_DIR" "$BAM_DIR" "$VCF_DIR" "$CONSENSUS_DIR" "$TMP_DIR"
+```
+Group the directories into array
+```
+DIRS=(
+  "$FASTQC_DIR" "$FASTP_DIR" "$REF_DIR" "$DATABASE_DIR" "$OUT_DIR" "$TRIMMED_DIR"
+  "$HOST_FILTERED_DIR" "$BAM_DIR" "$VCF_DIR" "$FASTA_DIR" "$TMP_DIR"
+)
+
+# Create directories if they don't exist
+for dir in "${DIRS[@]}"; do
+  [ -d "$dir" ] || mkdir -p "$dir"
+done
+```
+## Step 3: Clean out human reads using default human-t2t-hla genome
+```
+hostile clean \
+    --fastq1 "$FASTQ_DIR/515_S13_L001_R1_001.fastq.gz" \
+    --fastq2 "$FASTQ_DIR/515_S13_L001_R2_001.fastq.gz" \
+    --out-dir "$HOST_FILTERED_DIR" \
+    --force 
 ```
