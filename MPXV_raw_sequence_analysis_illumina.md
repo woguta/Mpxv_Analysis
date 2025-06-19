@@ -427,7 +427,7 @@ samtools faidx "$MPOX_REF1"
 
 # Loop over FASTQ R1 files
 for R1 in "$FASTQ_DIR"/*_R1_001.fastq.gz; do
-    SAMPLE=$(basename "$R1" | cut -d'_' -f1)
+    SAMPLE=$(basename "$R1" | cut -d'_' -f1,2)
     R2="${R1/_R1_/_R2_}"
     echo "Processing sample: $SAMPLE"
 
