@@ -1,25 +1,25 @@
 # Mpox Sequence analysis from Illumina raw data (fastq files)
-### The analysis pipeline follows raw sequence reads analysis from fastq to consensus fasta.
+## The analysis pipeline follows raw sequence reads analysis from fastq to consensus fasta for amplicon based sequencing.
 
-Hostile or bowtie or Kraken2 or BBMap (BBduk/BBsplit): Human read removal
+### Hostile or bowtie or Kraken2 or BBMap (BBduk/BBsplit): Human read removal
 
-FastQC: Quality check of raw reads
+### FastQC: Quality check of raw reads
 
- Fastp or Trimmomatic: Adapter trimming and quality filtering
+ ### Fastp or Trimmomatic: Adapter trimming and quality filtering
 
-BWA mem or Minimap2: Mapping reads to references
+### BWA mem or Minimap2: Mapping reads to references
 
-Samtools: BAM processing and stats
+### Samtools: BAM processing and stats
 
-Qualimap or Mosdepth: Mapping quality statistics
+### Qualimap or Mosdepth: Mapping quality statistics
 
-Freebayes or snippy for calling variants
+### Freebayes or snippy for calling variants
 
-bcftools for consensus building
+### bcftools for consensus building
 
 ## Step 1: Modules needed
 
-Load modules if in hpc
+### Load modules if in hpc
 
 ```
 module load hostile/2.0.0
