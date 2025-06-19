@@ -1,5 +1,5 @@
 # Mpox Sequence analysis from Illumina raw data (fastq files)
-## The analysis pipeline follows raw sequence reads analysis from fastq to consensus fasta.
+### The analysis pipeline follows raw sequence reads analysis from fastq to consensus fasta.
 
 Hostile or bowtie or Kraken2 or BBMap (BBduk/BBsplit): Human read removal
 
