@@ -324,3 +324,11 @@ if __name__ == "__main__":
     args = parse_args()
     process_gvcf(args)
 ```
+
+Compress and index the compressed gVCF
+
+```
+bgzip -c "$VCF_DIR/515_S13.variants.vcf" > "$VCF_DIR/515_S13.variants.vcf.gz"
+bcftools index -f "$VCF_DIR/515_S13.gvcf.gz"
+bcftools index -f "$VCF_DIR/515_S13.variants.vcf.gz"
+```
