@@ -17,7 +17,7 @@ Freebayes or snippy for calling variants
 
 bcftools for consensus building
 
-## 1. Modules needed
+## Modules needed
 
 Load modules if in hpc
 
@@ -99,4 +99,10 @@ if ! conda info --envs | grep -q "^squirrel"; then
 else
   echo "'squirrel' environment already exists."
 fi
+```
+Activate installed modules/make them available outisde mynev envt/run inside myenv
+
+```
+echo 'export PATH=/home/woguta/anaconda3/envs/myenv/bin:$PATH' >> ~/.bashrc
+source ~/.bashrc
 ```
