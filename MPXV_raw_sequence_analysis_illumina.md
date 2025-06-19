@@ -403,7 +403,7 @@ bcftools consensus \
     sed "s|$CTG_NAME|515_S13|" > "$FASTA_DIR/515_S13.fasta"
 ```
 ## Step 15: Create a loop/script to process all the fasta files
-save as mpox_fastq2fasta_sierra.sh
+A. Save as mpox_fastq2fasta_sierra.sh, stringent script
 
 ```
 #!/bin/bash
@@ -536,6 +536,110 @@ for R1 in "$FASTQ_DIR"/*_R1_001.fastq.gz; do
 
     # Step 13: Final consensus
     echo "Final concesus fasta for $SAMPLE..."
+    bcftools consensus \
+        -f "$VCF_DIR/${SAMPLE}.ambiguous.fa" \
+        -m "$VCF_DIR/${SAMPLE}.mask.1based.txt" \
+        "$VCF_DIR/${SAMPLE}.fixed.norm.vcf.gz" | \
+        sed "s|$CTG_NAME|${SAMPLE}|" > "$FASTA_DIR/${SAMPLE}.fasta"
+done
+```
+B. 
+Save as mpox_fastq2fasta1_sierra.sh, dafault script
+```
+#!/bin/bash
+
+# Define paths
+FASTQ_DIR="./mpox_files/mpox_sierra/fastq"
+FASTQC_DIR="./mpox_files/mpox_sierra/fastqc"
+FASTP_DIR="./mpox_files/mpox_sierra/fastp"
+REF_DIR="./mpox_files/mpox_sierra/refseqs"
+VCF_DIR="./mpox_files/mpox_sierra/vcf"
+BAM_DIR="./mpox_files/mpox_sierra/bam"
+FASTA_DIR="./mpox_files/mpox_sierra/fasta"
+MPOX_REF1="$REF_DIR/Mpox_ref_NC_063383.1.fasta"
+
+# Index the reference (only once)
+mkdir -p "$REF_DIR/index"
+cp -f "$MPOX_REF1" "$REF_DIR/index"
+bwa index -p "$REF_DIR/index/Mpox_ref_NC_063383.1" "$REF_DIR/index/Mpox_ref_NC_063383.1.fasta"
+samtools faidx "$MPOX_REF1"
+
+# Loop over FASTQ R1 files
+for R1 in "$FASTQ_DIR"/*_R1_001.fastq.gz; do
+    SAMPLE=$(basename "$R1" | cut -d'_' -f1,2)
+    R2="${R1/_R1_/_R2_}"
+    echo "Processing sample: $SAMPLE"
+
+    # Step 1: Initial FASTQC
+    fastqc -f fastq "$R1" "$R2" -o "$FASTQC_DIR"
+
+    # Step 2: Adapter/quality trimming
+    fastp \
+        -i "$R1" \
+        -I "$R2" \
+        -o "$FASTP_DIR/${SAMPLE}_trim_R1.fastq.gz" \
+        -O "$FASTP_DIR/${SAMPLE}_trim_R2.fastq.gz" \
+        --detect_adapter_for_pe \
+        --json "$FASTP_DIR/${SAMPLE}.fastp.json" \
+        --html "$FASTP_DIR/${SAMPLE}.fastp.html" \
+        2> "$FASTP_DIR/${SAMPLE}.fastp.log"
+
+    # Step 3: Post-trim FastQC
+    fastqc "$FASTP_DIR/${SAMPLE}_trim_R1.fastq.gz" "$FASTP_DIR/${SAMPLE}_trim_R2.fastq.gz" -o "$FASTQC_DIR"
+
+    # Step 4: Mapping to reference
+    bwa mem "$REF_DIR/index/Mpox_ref_NC_063383.1" \
+        "$FASTP_DIR/${SAMPLE}_trim_R1.fastq.gz" \
+        "$FASTP_DIR/${SAMPLE}_trim_R2.fastq.gz" | \
+        samtools sort -o "$BAM_DIR/${SAMPLE}.sorted.bam"
+
+    samtools index -f "$BAM_DIR/${SAMPLE}.sorted.bam"
+
+    # Step 5: Variant calling
+    freebayes \
+        -p 1 \
+        -f "$MPOX_REF1" \
+        "$BAM_DIR/${SAMPLE}.sorted.bam" > "$VCF_DIR/${SAMPLE}.gvcf"
+
+    bgzip -f "$VCF_DIR/${SAMPLE}.gvcf"
+    bcftools index -f "$VCF_DIR/${SAMPLE}.gvcf.gz"
+
+    # Step 6: Process gVCF
+    python ./myscripts/process_gvcf.py \
+        -m "$VCF_DIR/${SAMPLE}.mask.txt" \
+        -v "$VCF_DIR/${SAMPLE}.variants.vcf" \
+        -c "$VCF_DIR/${SAMPLE}.consensus.vcf" \
+        "$VCF_DIR/${SAMPLE}.gvcf.gz"
+
+    # Step 7: Normalize VCFs
+    for v in "variants" "consensus"; do
+        bcftools norm \
+            -f "$MPOX_REF1" \
+            "$VCF_DIR/${SAMPLE}.${v}.vcf" > "$VCF_DIR/${SAMPLE}.${v}.norm.vcf"
+    done
+
+    # Step 8: Split ambiguous vs fixed
+    for vt in "ambiguous" "fixed"; do
+        awk -v vartag="ConsensusTag=$vt" \
+            '$0 ~ /^#/ || $0 ~ vartag' \
+            "$VCF_DIR/${SAMPLE}.consensus.norm.vcf" > "$VCF_DIR/${SAMPLE}.${vt}.norm.vcf"
+        bgzip -f "$VCF_DIR/${SAMPLE}.${vt}.norm.vcf"
+        tabix -f -p vcf "$VCF_DIR/${SAMPLE}.${vt}.norm.vcf.gz"
+    done
+
+    # Step 9: Apply ambiguous variants
+    bcftools consensus \
+        -f "$MPOX_REF1" \
+        -I "$VCF_DIR/${SAMPLE}.ambiguous.norm.vcf.gz" > "$VCF_DIR/${SAMPLE}.ambiguous.fa"
+
+    # Step 10: Contig name
+    CTG_NAME=$(head -n1 "$MPOX_REF1" | sed 's/>//')
+
+    # Step 11: Convert BED mask to 1-based
+    awk '{if ($2 == 0) $2 = 1; else $2 = $2 + 1}1' OFS="\t" \
+        "$VCF_DIR/${SAMPLE}.mask.txt" > "$VCF_DIR/${SAMPLE}.mask.1based.txt"
+
+    # Step 12: Final consensus FASTA
     bcftools consensus \
         -f "$VCF_DIR/${SAMPLE}.ambiguous.fa" \
         -m "$VCF_DIR/${SAMPLE}.mask.1based.txt" \
