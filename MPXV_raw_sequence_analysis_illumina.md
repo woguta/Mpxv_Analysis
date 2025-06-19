@@ -246,9 +246,9 @@ freebayes \
     --gvcf-dont-use-chunk true \
     "$BAM_DIR/515_S13.sorted.bam" > "$VCF_DIR/515_S13.gvcf"
 ```
-# Save into vcf file for variant further studies
+Save into vcf file for variant further studies
 
-``
+```
 freebayes \
     -p 1 \
     -f "$MPOX_REF1" \
