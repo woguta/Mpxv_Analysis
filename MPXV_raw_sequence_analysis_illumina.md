@@ -258,6 +258,9 @@ freebayes \
     --min-coverage 10 \
     "$BAM_DIR/515_S13.sorted.bam" > "$VCF_DIR/515_S13.vcf.gz"
 ```
+
+## Step 10: Create consensus variants, low-frequency variants and a coverage mask
+
 Create a function to process the gvcf and save in your scripts directory as "process_gvcf.py"
 
 ```
@@ -325,10 +328,77 @@ if __name__ == "__main__":
     process_gvcf(args)
 ```
 
-Compress and index the compressed gVCF
+Process the gvcf file
+
+```
+python ./myscripts/process_gvcf.py \
+  -d 10 \
+  -l 0.25 \
+  -u 0.75 \
+  -m "$VCF_DIR/515_S13.mask.txt" \
+  -v "$VCF_DIR/515_S13.variants.vcf" \
+  -c "$VCF_DIR/515_S13.consensus.vcf" \
+  "$VCF_DIR/515_S13.gvcf.gz"
+```
+Compress and index the processd and compressed gVCF file
 
 ```
 bgzip -c "$VCF_DIR/515_S13.variants.vcf" > "$VCF_DIR/515_S13.variants.vcf.gz"
-bcftools index -f "$VCF_DIR/515_S13.gvcf.gz"
 bcftools index -f "$VCF_DIR/515_S13.variants.vcf.gz"
+bcftools index -f "$VCF_DIR/515_S13.gvcf.gz"
+bcftools index -f "$VCF_DIR/515_S13.vcf.gz"
+```
+
+## Step 11: Normalize variant records into canonical VCF representation
+
+```
+for v in "variants" "consensus"; do
+    echo -e "normalising variants in: $v"
+    bcftools norm \
+        -f "$MPOX_REF1" \
+        "$VCF_DIR/515_S13.$v.vcf" > "$VCF_DIR/515_S13.$v.norm.vcf"
+done
+```
+
+## Step 12: Split consensus VCF file into a set that should be IUPAC codes and all other bases, using the ConsensusTag in the VCF
+
+```
+for vt in "ambiguous" "fixed"; do
+    echo "Splitting on ConsensusTag: $vt"
+    awk -v vartag="ConsensusTag=$vt" \
+        '$0 ~ /^#/ || $0 ~ vartag' \
+        "$VCF_DIR/515_S13.consensus.norm.vcf" > "$VCF_DIR/515_S13.$vt.norm.vcf"
+
+    bgzip -f "$VCF_DIR/515_S13.$vt.norm.vcf"
+    tabix -f -p vcf "$VCF_DIR/515_S13.$vt.norm.vcf.gz"
+done
+```
+## Step 13: Apply ambiguous variants first using IUPAC codes, has no indels
+
+```
+bcftools consensus \
+    -f "$MPOX_REF1" \
+    -I "$VCF_DIR/515_S13.ambiguous.norm.vcf.gz" > "$VCF_DIR/515_S13.ambiguous.fa"
+```
+
+Get viral contig name from reference
+
+```
+CTG_NAME=$(head -n1 "$MPOX_REF1" | sed 's/>//')
+```
+
+Make sure bed file is in correct coordinate formats
+
+```
+awk '{if ($2 == 0) $2 = 1; else $2=$2+1}1' OFS="\t" "$VCF_DIR/515_S13.mask.txt" > "$VCF_DIR/515_S13.mask.1based.txt"
+```
+
+## Step 14: Build consensus variants, low-frequency variants and a coverage mask generation into final genomic sequence in fasta using bcftools
+
+```
+bcftools consensus \
+    -f "$VCF_DIR/515_S13.ambiguous.fa" \
+    -m "$VCF_DIR/515_S13.mask.1based.txt" \
+    "$VCF_DIR/515_S13.fixed.norm.vcf.gz" | \
+    sed "s|$CTG_NAME|515_S13|" > "$FASTA_DIR/515_S13.fasta"
 ```
