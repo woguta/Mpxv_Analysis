@@ -18,6 +18,9 @@ Freebayes or snippy for calling variants
 bcftools for consensus building
 
 ## 1. Modules needed
+
+Load modules if in hpc
+
 ```
 module load hostile/2.0.0
 module load fastqc/0.11.9
@@ -25,7 +28,75 @@ module load fastp/0.24.1
 module load seqtk/1.3
 module load bwa/0.7.17
 module load freebayes/1.3.4
-module unload bcftools/1.17
+module unload samtools/1.17
 module unload bcftools/1.13
 ```
+Install modules if in the local terminal
 
+```
+conda install bioconda::fastp
+conda install bioconda::fastqc
+conda install bioconda::ivar
+conda install bioconda::samtools
+conda install bioconda::bfctools
+conda install bioconda/label/broken::bcftools
+conda install bioconda::minimap2
+conda install bioconda::hostile
+conda install bioconda::seqtk
+conda install bioconda::freebayes
+conda install bioconda::bwa
+conda install bioconda::bwa-mem2
+conda install bioconda::snakemake
+conda install bioconda::mamba
+conda install -n base mamba
+conda create -c bioconda -c conda-forge -n squirrel -y squirrel
+```
+OR for geeks
+
+```
+#!/bin/bash
+
+# List of required packages with their channels
+declare -A packages=(
+  [fastp]="bioconda"
+  [fastqc]="bioconda"
+  [ivar]="bioconda"
+  [samtools]="bioconda"
+  [bfctools]="bioconda"              # Typo? Likely meant 'bcftools'
+  [bcftools]="bioconda/label/broken"
+  [minimap2]="bioconda"
+  [hostile]="bioconda"
+  [seqtk]="bioconda"
+  [freebayes]="bioconda"
+  [bwa]="bioconda"
+  [bwa-mem2]="bioconda"
+  [snakemake]="bioconda"
+  [mamba]="bioconda"
+)
+
+# Function to check and install packages
+for pkg in "${!packages[@]}"; do
+  if conda list "$pkg" | grep -q "^$pkg"; then
+    echo "$pkg is already installed."
+  else
+    echo "Installing $pkg from ${packages[$pkg]}..."
+    conda install -y -c "${packages[$pkg]}" "$pkg"
+  fi
+done
+
+# Install mamba in base environment if not already
+if ! conda list -n base | grep -q "^mamba"; then
+  echo "Installing mamba in base environment..."
+  conda install -n base -y mamba
+else
+  echo "mamba is already installed in base."
+fi
+
+# Create squirrel environment if not exists
+if ! conda info --envs | grep -q "^squirrel"; then
+  echo "Creating 'squirrel' environment..."
+  conda create -y -n squirrel -c bioconda -c conda-forge squirrel
+else
+  echo "'squirrel' environment already exists."
+fi
+```
