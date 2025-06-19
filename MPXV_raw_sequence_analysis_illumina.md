@@ -181,7 +181,7 @@ fastp \
     -o "$FASTP_DIR/515_S13_trim_R1.fastq.gz" \
     -O "$FASTP_DIR/515_S13_trim_R2.fastq.gz"
 ```
-Being stringent - preferred!!
+Being stringent: preferred!
 
 ```
 fastp \
@@ -197,4 +197,17 @@ fastp \
   --unqualified_percent_limit 40 \
   --length_required 20 \
   2> "$FASTP_DIR/515_S13.fastp.log"
+```
+## Step 6: Second Quality control/post trim fastQC
+
+```
+fastqc "$FASTP_DIR/515_S13_trim_R1.fastq.gz" "$FASTP_DIR/515_S13_trim_R2.fastq.gz" -o "$FASTQC_DIR"
+```
+## Step 7: Index the reference genome using bwa
+
+```
+mkdir -p "$REF_DIR/index" # create index directory
+cp -rf "$REF_DIR/Mpox_ref_NC_063383.1.fasta" "$REF_DIR/index" #Copy recursively ref to index directory
+bwa index -p "$REF_DIR/index/Mpox_ref_NC_063383.1" \
+        "$REF_DIR/index/Mpox_ref_NC_063383.1.fasta"
 ```
