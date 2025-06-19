@@ -122,16 +122,16 @@ Set directory paths
 
 ```
 WORK_DIR="./mpox_files/mpox_sierra"
-FASTQ_DIR="${WORK_DIR}/fastq_files"
-FASTQC_DIR="${WORK_DIR}/fastqc_files"
-FASTP_DIR="${WORK_DIR}/fastp_trimmed"
+FASTQ_DIR="${WORK_DIR}/fastq"
+FASTQC_DIR="${WORK_DIR}/fastqc"
+FASTP_DIR="${WORK_DIR}/fastp"
 REF_DIR="${WORK_DIR}/refseqs"
 DATABASE_DIR="${WORK_DIR}/databases"
 OUT_DIR="${WORK_DIR}/results"
-HOST_FILTERED_DIR="${WORK_DIR}/host_filtered"
-BAM_DIR="${WORK_DIR}/mapped_bam"
+HOST_FILTERED_DIR="${WORK_DIR}/hostile"
+BAM_DIR="${WORK_DIR}/bam"
 VCF_DIR="${WORK_DIR}/vcf"
-FASTA_DIR="${WORK_DIR}/fasta_files"
+FASTA_DIR="${WORK_DIR}/fasta"
 MPOX_REF1="${REF_DIR}/Mpox_ref_NC_063383.1.fasta"
 MPOX_REF2="${REF_DIR}/mpox_ref_NC_003310.1.fasta"
 ```
@@ -410,13 +410,13 @@ save as mpox_fastq2fasta_sierra.sh
 
 # Define paths
 FASTQ_DIR="./mpox_files/mpox_sierra/fastq"
-HOST_FILTERED_DIR="./mpox_files/mpox_sierra/host_filtered"
+HOST_FILTERED_DIR="./mpox_files/mpox_sierra/hostile"
 FASTQC_DIR="./mpox_files/mpox_sierra/fastqc"
 FASTP_DIR="./mpox_files/mpox_sierra/fastp"
-REF_DIR="./mpox_files/mpox_sierra/ref"
+REF_DIR="./mpox_files/mpox_sierra/refseqs"
 VCF_DIR="./mpox_files/mpox_sierra/vcf"
 BAM_DIR="./mpox_files/mpox_sierra/bam"
-FASTA_DIR="./mpox_files/mpox_sierra/consensus"
+FASTA_DIR="./mpox_files/mpox_sierra/fasta"
 MPOX_REF1="$REF_DIR/Mpox_ref_NC_063383.1.fasta"
 
 # Index the reference (only once)
