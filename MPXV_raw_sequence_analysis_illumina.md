@@ -17,7 +17,7 @@ Freebayes or snippy for calling variants
 
 bcftools for consensus building
 
-## Step 1: Modules needed
+### Step 1: Modules needed
 
 Load modules if in hpc
 
@@ -116,7 +116,7 @@ Confirm
 ```
 head -n 1 /home/woguta/anaconda3/envs/squirrel/bin/squirrel
 ```
-## Step 2: Define and create directories
+### Step 2: Define and create directories
 
 Set directory paths
 
@@ -153,7 +153,7 @@ for dir in "${DIRS[@]}"; do
   [ -d "$dir" ] || mkdir -p "$dir"
 done
 ```
-## Step 3: Clean out human reads using default human-t2t-hla genome
+### Step 3: Clean out human reads using default human-t2t-hla genome
 
 ```
 hostile clean \
@@ -162,7 +162,7 @@ hostile clean \
     --out-dir "$HOST_FILTERED_DIR" \
     --force 
 ```
-## Step 4: First Quality control
+### Step 4: First Quality control
 
 ```
 fastqc \
@@ -170,7 +170,7 @@ fastqc \
             "$HOST_FILTERED_DIR/515_S13_L001_R2_001.clean_2.fastq.gz" \
     -o "$FASTQC_DIR"
 ```
-## Step 5: Adapter and low quality reads trimming
+### Step 5: Adapter and low quality reads trimming
 
 Using fastp simple/all default
 
@@ -198,12 +198,12 @@ fastp \
   --length_required 20 \
   2> "$FASTP_DIR/515_S13.fastp.log"
 ```
-## Step 6: Second Quality control/post trim fastQC
+### Step 6: Second Quality control/post trim fastQC
 
 ```
 fastqc "$FASTP_DIR/515_S13_trim_R1.fastq.gz" "$FASTP_DIR/515_S13_trim_R2.fastq.gz" -o "$FASTQC_DIR"
 ```
-## Step 7: Index the reference genome using bwa
+### Step 7: Index the reference genome using bwa
 
 ```
 mkdir -p "$REF_DIR/index" # create index directory
@@ -216,7 +216,7 @@ Index the ref in refseqs directory using samtools
 ```
 samtools faidx "$MPOX_REF1"
 ```
-## Step 8: Map to MPXV reference using bwa and sort using samtools
+### Step 8: Map to MPXV reference using bwa and sort using samtools
 
 ```
 bwa mem \
@@ -230,7 +230,7 @@ Index the sorted bam alignment
 ```
 samtools index -f "$BAM_DIR/515_S13.sorted.bam"
 ```
-## Step 9: Variant calling using freebayes
+### Step 9: Variant calling using freebayes
 
 Save into genomic variant call format for genomic concensus fasta building
 
@@ -259,7 +259,7 @@ freebayes \
     "$BAM_DIR/515_S13.sorted.bam" > "$VCF_DIR/515_S13.vcf.gz"
 ```
 
-## Step 10: Create consensus variants, low-frequency variants and a coverage mask
+### Step 10: Create consensus variants, low-frequency variants and a coverage mask
 
 Create a function to process the gvcf and save in your scripts directory as "process_gvcf.py"
 
@@ -349,7 +349,7 @@ bcftools index -f "$VCF_DIR/515_S13.gvcf.gz"
 bcftools index -f "$VCF_DIR/515_S13.vcf.gz"
 ```
 
-## Step 11: Normalize variant records into canonical VCF representation
+### Step 11: Normalize variant records into canonical VCF representation
 
 ```
 for v in "variants" "consensus"; do
@@ -360,7 +360,7 @@ for v in "variants" "consensus"; do
 done
 ```
 
-## Step 12: Split consensus VCF file into a set that should be IUPAC codes and all other bases, using the ConsensusTag in the VCF
+### Step 12: Split consensus VCF file into a set that should be IUPAC codes and all other bases, using the ConsensusTag in the VCF
 
 ```
 for vt in "ambiguous" "fixed"; do
@@ -373,7 +373,7 @@ for vt in "ambiguous" "fixed"; do
     tabix -f -p vcf "$VCF_DIR/515_S13.$vt.norm.vcf.gz"
 done
 ```
-## Step 13: Apply ambiguous variants first using IUPAC codes, has no indels
+### Step 13: Apply ambiguous variants first using IUPAC codes, has no indels
 
 ```
 bcftools consensus \
@@ -393,7 +393,7 @@ Make sure bed file is in correct coordinate formats
 awk '{if ($2 == 0) $2 = 1; else $2=$2+1}1' OFS="\t" "$VCF_DIR/515_S13.mask.txt" > "$VCF_DIR/515_S13.mask.1based.txt"
 ```
 
-## Step 14: Build consensus variants, low-frequency variants and a coverage mask generation into final genomic sequence in fasta using bcftools
+### Step 14: Build consensus variants, low-frequency variants and a coverage mask generation into final genomic sequence in fasta using bcftools
 
 ```
 bcftools consensus \
