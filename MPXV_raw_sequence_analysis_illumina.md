@@ -402,3 +402,144 @@ bcftools consensus \
     "$VCF_DIR/515_S13.fixed.norm.vcf.gz" | \
     sed "s|$CTG_NAME|515_S13|" > "$FASTA_DIR/515_S13.fasta"
 ```
+## Step 15: Create a loop/script to process all the fasta files
+save as mpox_fastq2fasta_sierra.sh
+
+```
+#!/bin/bash
+
+# Define paths
+FASTQ_DIR="./mpox_files/mpox_sierra/fastq"
+HOST_FILTERED_DIR="./mpox_files/mpox_sierra/host_filtered"
+FASTQC_DIR="./mpox_files/mpox_sierra/fastqc"
+FASTP_DIR="./mpox_files/mpox_sierra/fastp"
+REF_DIR="./mpox_files/mpox_sierra/ref"
+VCF_DIR="./mpox_files/mpox_sierra/vcf"
+BAM_DIR="./mpox_files/mpox_sierra/bam"
+FASTA_DIR="./mpox_files/mpox_sierra/consensus"
+MPOX_REF1="$REF_DIR/Mpox_ref_NC_063383.1.fasta"
+
+# Index the reference (only once)
+mkdir -p "$REF_DIR/index"
+cp -f "$MPOX_REF1" "$REF_DIR/index"
+bwa index -p "$REF_DIR/index/Mpox_ref_NC_063383.1" "$REF_DIR/index/Mpox_ref_NC_063383.1.fasta"
+samtools faidx "$MPOX_REF1"
+
+# Loop over FASTQ R1 files
+for R1 in "$FASTQ_DIR"/*_R1_001.fastq.gz; do
+    SAMPLE=$(basename "$R1" | cut -d'_' -f1)
+    R2="${R1/_R1_/_R2_}"
+    echo "Processing sample: $SAMPLE"
+
+    # Step 1: Remove host reads
+    echo "Removing human reads for for $SAMPLE..."
+    hostile clean \
+        --fastq1 "$R1" \
+        --fastq2 "$R2" \
+        --out-dir "$HOST_FILTERED_DIR" \
+        --force
+
+    CLEAN_R1="$HOST_FILTERED_DIR/${SAMPLE}_L001_R1_001.clean_1.fastq.gz"
+    CLEAN_R2="$HOST_FILTERED_DIR/${SAMPLE}_L001_R2_001.clean_2.fastq.gz"
+
+    # Step 2: FastQC
+    echo "Running FASTQC for $SAMPLE..."
+    fastqc -f fastq "$CLEAN_R1" "$CLEAN_R2" -o "$FASTQC_DIR"
+
+    # Step 3: Trim adapters and low-quality reads
+    echo "Trimming adapters & low reads for $SAMPLE..."
+    fastp \
+        --in1 "$CLEAN_R1" \
+        --in2 "$CLEAN_R2" \
+        --out1 "$FASTP_DIR/${SAMPLE}_trim_R1.fastq.gz" \
+        --out2 "$FASTP_DIR/${SAMPLE}_trim_R2.fastq.gz" \
+        --detect_adapter_for_pe \
+        --json "$FASTP_DIR/${SAMPLE}.fastp.json" \
+        --html "$FASTP_DIR/${SAMPLE}.fastp.html" \
+        --cut_mean_quality 20 \
+        --qualified_quality_phred 20 \
+        --unqualified_percent_limit 40 \
+        --length_required 20 \
+        2> "$FASTP_DIR/${SAMPLE}.fastp.log"
+
+    # Step 4: Post-trim FastQC
+    echo "Post-trim FASTQC for $SAMPLE..."
+    fastqc "$FASTP_DIR/${SAMPLE}_trim_R1.fastq.gz" "$FASTP_DIR/${SAMPLE}_trim_R2.fastq.gz" -o "$FASTQC_DIR"
+
+    # Step 5: Map to reference
+    echo "Mapping to ref for $SAMPLE..."
+    bwa mem "$REF_DIR/index/Mpox_ref_NC_063383.1" \
+        "$FASTP_DIR/${SAMPLE}_trim_R1.fastq.gz" \
+        "$FASTP_DIR/${SAMPLE}_trim_R2.fastq.gz" | \
+        samtools sort -o "$BAM_DIR/${SAMPLE}.sorted.bam"
+
+    samtools index -f "$BAM_DIR/${SAMPLE}.sorted.bam"
+
+    # Step 6: Variant calling
+    echo "Calling variants for $SAMPLE..."
+    freebayes \
+        -p 1 \
+        -f "$MPOX_REF1" \
+        -F 0.2 \
+        -C 1 \
+        --pooled-continuous \
+        --min-coverage 10 \
+        --gvcf \
+        --gvcf-dont-use-chunk true \
+        "$BAM_DIR/${SAMPLE}.sorted.bam" > "$VCF_DIR/${SAMPLE}.gvcf"
+
+    bgzip -f "$VCF_DIR/${SAMPLE}.gvcf"
+    bcftools index -f "$VCF_DIR/${SAMPLE}.gvcf.gz"
+
+    # Step 7: Process gVCF
+    echo "Processing gVCF for $SAMPLE..."
+    python ./myscripts/process_gvcf.py \
+        -d 10 \
+        -l 0.25 \
+        -u 0.75 \
+        -m "$VCF_DIR/${SAMPLE}.mask.txt" \
+        -v "$VCF_DIR/${SAMPLE}.variants.vcf" \
+        -c "$VCF_DIR/${SAMPLE}.consensus.vcf" \
+        "$VCF_DIR/${SAMPLE}.gvcf.gz"
+
+    # Step 8: Normalize VCFs
+    echo "Normalizing VCF for $SAMPLE..."
+    for v in "variants" "consensus"; do
+        bcftools norm \
+            -f "$MPOX_REF1" \
+            "$VCF_DIR/${SAMPLE}.${v}.vcf" > "$VCF_DIR/${SAMPLE}.${v}.norm.vcf"
+    done
+
+    # Step 9: Split ambiguous vs fixed
+    echo "Splitting ambiguous vs fixed for $SAMPLE..."
+    for vt in "ambiguous" "fixed"; do
+        awk -v vartag="ConsensusTag=$vt" \
+            '$0 ~ /^#/ || $0 ~ vartag' \
+            "$VCF_DIR/${SAMPLE}.consensus.norm.vcf" > "$VCF_DIR/${SAMPLE}.${vt}.norm.vcf"
+        bgzip -f "$VCF_DIR/${SAMPLE}.${vt}.norm.vcf"
+        tabix -f -p vcf "$VCF_DIR/${SAMPLE}.${vt}.norm.vcf.gz"
+    done
+
+    # Step 10: Apply ambiguous variants using IUPAC codes
+    echo "Applying IUPAC codes for $SAMPLE..."
+    bcftools consensus \
+        -f "$MPOX_REF1" \
+        -I "$VCF_DIR/${SAMPLE}.ambiguous.norm.vcf.gz" > "$VCF_DIR/${SAMPLE}.ambiguous.fa"
+
+    # Step 11: Get contig name from FASTA
+    CTG_NAME=$(head -n1 "$MPOX_REF1" | sed 's/>//')
+
+    # Step 12: Correct mask file to 1-based
+    echo "Correcting mask to 1-based for $SAMPLE..."
+    awk '{if ($2 == 0) $2 = 1; else $2 = $2 + 1}1' OFS="\t" \
+        "$VCF_DIR/${SAMPLE}.mask.txt" > "$VCF_DIR/${SAMPLE}.mask.1based.txt"
+
+    # Step 13: Final consensus
+    echo "Final concesus fasta for $SAMPLE..."
+    bcftools consensus \
+        -f "$VCF_DIR/${SAMPLE}.ambiguous.fa" \
+        -m "$VCF_DIR/${SAMPLE}.mask.1based.txt" \
+        "$VCF_DIR/${SAMPLE}.fixed.norm.vcf.gz" | \
+        sed "s|$CTG_NAME|${SAMPLE}|" > "$FASTA_DIR/${SAMPLE}.fasta"
+done
+```
