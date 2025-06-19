@@ -232,7 +232,7 @@ samtools index -f "$BAM_DIR/515_S13.sorted.bam"
 ```
 ## Step 9: Variant calling using freebayes
 
-Save into genomic variant call format for concensus building
+Save into genomic variant call format for genomic concensus fasta building
 
 ```
 freebayes \
@@ -246,7 +246,7 @@ freebayes \
     --gvcf-dont-use-chunk true \
     "$BAM_DIR/515_S13.sorted.bam" > "$VCF_DIR/515_S13.gvcf"
 ```
-Save into vcf file for variant further studies
+Save into vcf file for variant further studies or use the *.variants.vcf file
 
 ```
 freebayes \
