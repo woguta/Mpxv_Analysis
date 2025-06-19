@@ -256,7 +256,71 @@ freebayes \
     -C 1 \
     --pooled-continuous \
     --min-coverage 10 \
-    --vcf \
-    --variant-input \
-    "$BAM_DIR/515_S13.sorted.bam" > "$VCF_DIR/515_S13.vcf"
+    "$BAM_DIR/515_S13.sorted.bam" > "$VCF_DIR/515_S13.vcf.gz"
+```
+Create a function to process the gvcf and save in your scripts directory as "process_gvcf.py"
+
+```
+#!/usr/bin/env python3
+
+import argparse
+import gzip
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Process gVCF for mask and variant filtering")
+    parser.add_argument("gvcf", help="Input gVCF (can be .gz)")
+    parser.add_argument("-d", "--min_depth", type=int, default=10, help="Minimum depth to keep")
+    parser.add_argument("-l", "--min_af", type=float, default=0.25, help="Minimum allele frequency")
+    parser.add_argument("-u", "--max_af", type=float, default=0.75, help="Maximum allele frequency")
+    parser.add_argument("-m", "--mask_file", required=True, help="Output BED file with masked regions")
+    parser.add_argument("-v", "--variant_file", required=True, help="Filtered variants VCF output")
+    parser.add_argument("-c", "--consensus_file", required=True, help="Filtered consensus VCF output")
+    return parser.parse_args()
+
+def open_file(filename):
+    return gzip.open(filename, 'rt') if filename.endswith(".gz") else open(filename, 'r')
+
+def process_gvcf(args):
+    with open_file(args.gvcf) as infile, \
+         open(args.mask_file, 'w') as mask_out, \
+         open(args.variant_file, 'w') as var_out, \
+         open(args.consensus_file, 'w') as cons_out:
+
+        for line in infile:
+            if line.startswith("#"):
+                var_out.write(line)
+                cons_out.write(line)
+                continue
+
+            fields = line.strip().split("\t")
+            chrom, pos, id_, ref, alt, qual, filter_, info, format_, sample = fields
+
+            info_dict = {kv.split("=")[0]: kv.split("=")[1] for kv in info.split(";") if "=" in kv}
+
+            depth = int(info_dict.get("DP", 0))
+            af = float(info_dict.get("AF", 0.0)) if "AF" in info_dict else None
+            end = int(info_dict.get("END", pos))  # gVCF block END
+
+            # mask regions with low coverage
+            if depth < args.min_depth:
+                mask_out.write(f"{chrom}\t{int(pos)-1}\t{end}\n")
+                continue
+
+            if alt == "." or alt == "<NON_REF>":
+                # likely reference or uninformative block, write to consensus only
+                cons_out.write(line)
+                continue
+
+            if af is not None and (af < args.min_af or af > args.max_af):
+                # ambiguous frequency, mask
+                mask_out.write(f"{chrom}\t{int(pos)-1}\t{end}\n")
+                continue
+
+            # Otherwise, write variant
+            var_out.write(line)
+            cons_out.write(line)
+
+if __name__ == "__main__":
+    args = parse_args()
+    process_gvcf(args)
 ```
