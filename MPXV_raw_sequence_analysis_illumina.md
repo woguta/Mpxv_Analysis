@@ -543,8 +543,7 @@ for R1 in "$FASTQ_DIR"/*_R1_001.fastq.gz; do
         sed "s|$CTG_NAME|${SAMPLE}|" > "$FASTA_DIR/${SAMPLE}.fasta"
 done
 ```
-B. 
-Save as mpox_fastq2fasta1_sierra.sh, dafault script
+B. Save as mpox_fastq2fasta1_sierra.sh, dafault script  but with  gvcf
 ```
 #!/bin/bash
 
@@ -645,5 +644,77 @@ for R1 in "$FASTQ_DIR"/*_R1_001.fastq.gz; do
         -m "$VCF_DIR/${SAMPLE}.mask.1based.txt" \
         "$VCF_DIR/${SAMPLE}.fixed.norm.vcf.gz" | \
         sed "s|$CTG_NAME|${SAMPLE}|" > "$FASTA_DIR/${SAMPLE}.fasta"
+done
+```
+
+C. B. Save as mpox_fastq2fasta2_sierra.sh, dafault script  but with vcf: preferred!
+
+```
+#!/bin/bash
+
+# Define paths
+FASTQ_DIR="./mpox_files/mpox_sierra/fastq"
+FASTQC_DIR="./mpox_files/mpox_sierra/fastqc"
+FASTP_DIR="./mpox_files/mpox_sierra/fastp"
+REF_DIR="./mpox_files/mpox_sierra/refseqs"
+VCF_DIR="./mpox_files/mpox_sierra/vcf"
+BAM_DIR="./mpox_files/mpox_sierra/bam"
+FASTA_DIR="./mpox_files/mpox_sierra/fasta"
+MPOX_REF1="$REF_DIR/Mpox_ref_NC_063383.1.fasta"
+
+# Index the reference (only once)
+mkdir -p "$REF_DIR/index"
+cp -f "$MPOX_REF1" "$REF_DIR/index"
+bwa index -p "$REF_DIR/index/Mpox_ref_NC_063383.1" "$REF_DIR/index/Mpox_ref_NC_063383.1.fasta"
+samtools faidx "$MPOX_REF1"
+
+# Loop over FASTQ R1 files
+for R1 in "$FASTQ_DIR"/*_R1_001.fastq.gz; do
+    SAMPLE=$(basename "$R1" | cut -d'_' -f1,2)
+    R2="${R1/_R1_/_R2_}"
+    echo "Processing sample: $SAMPLE"
+
+    # Step 1: Initial FASTQC
+    fastqc -f fastq "$R1" "$R2" -o "$FASTQC_DIR"
+
+    # Step 2: Adapter/quality trimming
+    fastp \
+        -i "$R1" \
+        -I "$R2" \
+        -o "$FASTP_DIR/${SAMPLE}_trim_R1.fastq.gz" \
+        -O "$FASTP_DIR/${SAMPLE}_trim_R2.fastq.gz" \
+        --detect_adapter_for_pe \
+        --json "$FASTP_DIR/${SAMPLE}.fastp.json" \
+        --html "$FASTP_DIR/${SAMPLE}.fastp.html" \
+        2> "$FASTP_DIR/${SAMPLE}.fastp.log"
+
+    # Step 3: Post-trim FastQC
+    fastqc "$FASTP_DIR/${SAMPLE}_trim_R1.fastq.gz" "$FASTP_DIR/${SAMPLE}_trim_R2.fastq.gz" -o "$FASTQC_DIR"
+
+    # Step 4: Mapping to reference
+    bwa mem "$REF_DIR/index/Mpox_ref_NC_063383.1" \
+        "$FASTP_DIR/${SAMPLE}_trim_R1.fastq.gz" \
+        "$FASTP_DIR/${SAMPLE}_trim_R2.fastq.gz" | \
+        samtools sort -o "$BAM_DIR/${SAMPLE}.sorted.bam"
+
+    samtools index -f "$BAM_DIR/${SAMPLE}.sorted.bam"
+
+    # Step 5: Variant calling
+    freebayes \
+        -p 1 \
+        -f "$MPOX_REF1" \
+        "$BAM_DIR/${SAMPLE}.sorted.bam" > "$VCF_DIR/${SAMPLE}.vcf"
+
+    bgzip -f "$VCF_DIR/${SAMPLE}.vcf"
+    bcftools index -f "$VCF_DIR/${SAMPLE}.vcf.gz"
+
+    # Step 5: Contig name
+    CTG_NAME=$(head -n1 "$MPOX_REF1" | sed 's/>//')
+
+    # Step 6: Final consensus FASTA
+    bcftools consensus \
+        -f "$MPOX_REF1" \
+        -I "$VCF_DIR/${SAMPLE}.vcf.gz" | \
+       sed "s|$CTG_NAME|${SAMPLE}|" > "$FASTA_DIR/${SAMPLE}.fa"
 done
 ```
