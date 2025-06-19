@@ -648,6 +648,7 @@ done
 ```
 
 C. B. Save as mpox_fastq2fasta2_sierra.sh, dafault script  but with vcf: preferred!
+Th sequences had good coverage based from fastqc results, no need for host read removal due to targeted amplicon based sequencing and to capture variants vcf preferred as low frquencies are expected, being stringent removes the variants
 
 ```
 #!/bin/bash
