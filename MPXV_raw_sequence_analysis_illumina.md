@@ -19,7 +19,7 @@ bcftools for consensus building
 
 ## Step 1: Modules needed
 
-### Load modules if in hpc
+Load modules if in hpc
 
 ```
 module load hostile/2.0.0
@@ -107,16 +107,19 @@ echo 'export PATH=/home/woguta/anaconda3/envs/myenv/bin:$PATH' >> ~/.bashrc
 source ~/.bashrc
 ```
 Make eg squirrel executable in base
+
 ```
 chmod +x /home/woguta/anaconda3/envs/squirrel/bin/squirrel
 ```
 Confirm
+
 ```
 head -n 1 /home/woguta/anaconda3/envs/squirrel/bin/squirrel
 ```
 ## Step 2: Define and create directories
 
 Set directory paths
+
 ```
 WORK_DIR="./mpox_files/mpox_sierra"
 FASTQ_DIR="${WORK_DIR}/fastq_files"
@@ -133,10 +136,12 @@ MPOX_REF1="${REF_DIR}/Mpox_ref_NC_063383.1.fasta"
 MPOX_REF2="${REF_DIR}/mpox_ref_NC_003310.1.fasta"
 ```
 Create directories
+
 ```
 mkdir -p "$FASTQC_DIR" "$FASTA_DIR" "$REF_DIR" "$DATABASE_DIR" "$OUT_DIR" "$FASTP_DIR" "$TRIMMED_DIR" "$HOST_FILTERED_DIR" "$BAM_DIR" "$VCF_DIR" "$CONSENSUS_DIR" "$TMP_DIR"
 ```
 Group the directories into array
+
 ```
 DIRS=(
   "$FASTQC_DIR" "$FASTP_DIR" "$REF_DIR" "$DATABASE_DIR" "$OUT_DIR" "$TRIMMED_DIR"
@@ -149,10 +154,47 @@ for dir in "${DIRS[@]}"; do
 done
 ```
 ## Step 3: Clean out human reads using default human-t2t-hla genome
+
 ```
 hostile clean \
     --fastq1 "$FASTQ_DIR/515_S13_L001_R1_001.fastq.gz" \
     --fastq2 "$FASTQ_DIR/515_S13_L001_R2_001.fastq.gz" \
     --out-dir "$HOST_FILTERED_DIR" \
     --force 
+```
+## Step 4: First Quality control
+
+```
+fastqc \
+    -f fastq "$HOST_FILTERED_DIR/515_S13_L001_R1_001.clean_1.fastq.gz" \
+            "$HOST_FILTERED_DIR/515_S13_L001_R2_001.clean_2.fastq.gz" \
+    -o "$FASTQC_DIR"
+```
+## Step 5: Adapter and low quality reads trimming
+
+Using fastp simple/all default
+
+```
+fastp \
+    -i "$HOST_FILTERED_DIR/515_S13_L001_R1_001.clean_1.fastq.gz" \
+    -I "$HOST_FILTERED_DIR/515_S13_L001_R2_001.clean_2.fastq.gz" \
+    -o "$FASTP_DIR/515_S13_trim_R1.fastq.gz" \
+    -O "$FASTP_DIR/515_S13_trim_R2.fastq.gz"
+```
+Being stringent - preferred!!
+
+```
+fastp \
+  --in1 "$HOST_FILTERED_DIR/515_S13_L001_R1_001.clean_1.fastq.gz" \
+  --in2 "$HOST_FILTERED_DIR/515_S13_L001_R2_001.clean_2.fastq.gz" \
+  --out1 "$FASTP_DIR/515_S13_trim_R1.fastq.gz" \
+  --out2 "$FASTP_DIR/515_S13_trim_R2.fastq.gz" \
+  --detect_adapter_for_pe \
+  --json "$FASTP_DIR/515_S13.fastp.json" \
+  --html "$FASTP_DIR/515_S13.fastp.html" \
+  --cut_mean_quality 20 \
+  --qualified_quality_phred 20 \
+  --unqualified_percent_limit 40 \
+  --length_required 20 \
+  2> "$FASTP_DIR/515_S13.fastp.log"
 ```
