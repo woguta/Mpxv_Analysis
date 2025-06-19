@@ -5,15 +5,15 @@ Hostile or bowtie or Kraken2 or BBMap (BBduk/BBsplit): Human read removal
 
 FastQC: Quality check of raw reads
 
-Trimmomatic or fastp: Adapter trimming and quality filtering
+ Fastp or Trimmomatic: Adapter trimming and quality filtering
 
-Minimap2 or BWA mem: Mapping reads to references
+BWA mem or Minimap2: Mapping reads to references
 
 Samtools: BAM processing and stats
 
 Qualimap or Mosdepth: Mapping quality statistics
 
-freebayes or snippy for calling variants
+Freebayes or snippy for calling variants
 
 bcftools for consensus building
 
