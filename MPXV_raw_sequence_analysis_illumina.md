@@ -672,7 +672,15 @@ samtools faidx "$MPOX_REF1"
 for R1 in "$FASTQ_DIR"/*_R1_001.fastq.gz; do
     SAMPLE=$(basename "$R1" | cut -d'_' -f1,2)
     R2="${R1/_R1_/_R2_}"
-    echo "Processing sample: $SAMPLE"
+    FASTA_FILE="$FASTA_DIR/${SAMPLE}.fa"
+
+    # Skip sample if FASTA already exists
+    if [[ -f "$FASTA_FILE" ]]; then
+        echo -e "Fasta already exists for $SAMPLE at $FASTA_FILE - Skipping.\n"
+    continue
+    else
+        echo -e "Proceeding processing $SAMPLE"
+    fi
 
     # Step 1: Initial FASTQC
     fastqc -f fastq "$R1" "$R2" -o "$FASTQC_DIR"
