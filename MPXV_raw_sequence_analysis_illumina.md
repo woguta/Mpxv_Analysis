@@ -647,8 +647,7 @@ for R1 in "$FASTQ_DIR"/*_R1_001.fastq.gz; do
 done
 ```
 
-C. B. Save as mpox_fastq2fasta2_sierra.sh, dafault script  but with vcf: preferred!
-Th sequences had good coverage based from fastqc results, no need for host read removal due to targeted amplicon based sequencing and to capture variants vcf preferred as low frquencies are expected, being stringent removes the variants
+C. Save the script as mpox_fastq2fasta2_sierra.sh. Use the default pipeline, but prioritize using VCF-based consensus generation. Since FastQC results showed good sequence coverage and the data comes from targeted amplicon-based sequencing, there's no need for host read removal. To capture low-frequency variants, VCF output is preferred—using overly stringent filtering may miss these important mutations.
 
 ```
 #!/bin/bash
@@ -718,4 +717,21 @@ for R1 in "$FASTQ_DIR"/*_R1_001.fastq.gz; do
         -I "$VCF_DIR/${SAMPLE}.vcf.gz" | \
        sed "s|$CTG_NAME|${SAMPLE}|" > "$FASTA_DIR/${SAMPLE}.fa"
 done
+```
+
+Run for apobec3 signatures for sustained human-to-human transmission
+
+```
+squirrel \
+#/home/woguta/anaconda3/envs/squirrel/bin/squirrel \
+    "$OUT_DIR/algn/mpox_aligned-nuc_2025-06-13T0911.fasta" \
+    --no-mask \
+    --seq-qc \
+    --outdir "$OUT_DIR/squirrel" \
+    --outfile apobec3_test.fasta \
+    --run-phylo \
+    --run-apobec3-phylo \
+    --interactive-tree \
+    --clade cladeiib
+    --clade cladeiib
 ```
