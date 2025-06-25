@@ -38,7 +38,7 @@ conda install bioconda::fastp
 conda install bioconda::fastqc
 conda install bioconda::ivar
 conda install bioconda::samtools
-conda install bioconda::bfctools
+conda install bioconda::bcftools
 conda install bioconda/label/broken::bcftools
 conda install bioconda::minimap2
 conda install bioconda::hostile
