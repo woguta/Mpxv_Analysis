@@ -727,6 +727,127 @@ for R1 in "$FASTQ_DIR"/*_R1_001.fastq.gz; do
 done
 ```
 
+OR
+
+```
+#!/bin/bash
+
+# Exit immediately on error, undefined variable, or pipeline failure
+set -euo pipefail
+
+# Show the command and line number that caused an error
+trap 'echo "ERROR on line $LINENO: $BASH_COMMAND"' ERR
+
+# ---------------------
+# Define paths
+# ---------------------
+FASTQ_DIR="./mpox_sierra/fastq"
+FASTQC_DIR="./mpox_sierra/fastqc"
+FASTP_DIR="./mpox_sierra/fastp"
+REF_DIR="./mpox_sierra/ref"
+BAM_DIR="./mpox_sierra/bam"
+VCF_DIR="./mpox_sierra/vcf"
+FASTA_DIR="./mpox_sierra/fasta"
+MPOX_REF="$REF_DIR/ref_NC_063383.1.fasta"
+INDEX_PREFIX="$REF_DIR/index/ref_NC_063383.1"
+
+# ---------------------
+# Create required directories
+# ---------------------
+echo "Step 0: Creating required directories..."
+mkdir -p "$FASTQ_DIR" "$FASTQC_DIR" "$FASTP_DIR" "$BAM_DIR" "$VCF_DIR" "$FASTA_DIR" "$REF_DIR/index"
+
+# ---------------------
+# Index the reference genome (only once)
+# ---------------------
+if [[ ! -f "$INDEX_PREFIX.bwt" ]]; then
+    echo "Step 1: Indexing reference genome..."
+    cp -f "$MPOX_REF" "$REF_DIR/index/"
+    bwa index -p "$INDEX_PREFIX" "$REF_DIR/index/$(basename "$MPOX_REF")"
+    samtools faidx "$MPOX_REF"
+else
+    echo "Step 1: Reference genome already indexed. Skipping indexing..."
+fi
+
+# ---------------------
+# Process each sample
+# ---------------------
+for R1 in "$FASTQ_DIR"/*_R1_001.fastq.gz; do
+    [[ -e "$R1" ]] || { echo "No FASTQ files found in $FASTQ_DIR. Exiting."; exit 1; }
+
+    SAMPLE=$(basename "$R1" | cut -d'_' -f1,2)
+    R2="${R1/R1/R2}"
+    FASTA_FILE="$FASTA_DIR/${SAMPLE}.fa"
+
+    if [[ -f "$FASTA_FILE" ]]; then
+        echo "Sample $SAMPLE already processed. Skipping..."
+        continue
+    fi
+
+    echo "--------------------------------------------"
+    echo "Processing sample: $SAMPLE"
+    echo "--------------------------------------------"
+
+    # Step 2: Initial FastQC
+    echo "Step 2: Running initial FastQC for $SAMPLE"
+    fastqc -f fastq "$R1" "$R2" -o "$FASTQC_DIR"
+
+    # Step 3: Trimming with fastp
+    echo "Step 3: Trimming reads for $SAMPLE with fastp"
+    fastp \
+        -i "$R1" \
+        -I "$R2" \
+        -o "$FASTP_DIR/${SAMPLE}_trim_R1.fastq.gz" \
+        -O "$FASTP_DIR/${SAMPLE}_trim_R2.fastq.gz" \
+        --detect_adapter_for_pe \
+        --json "$FASTP_DIR/${SAMPLE}.fastp.json" \
+        --html "$FASTP_DIR/${SAMPLE}.fastp.html" \
+        2> "$FASTP_DIR/${SAMPLE}.fastp.log"
+
+    # Step 4: Post-trim FastQC
+    echo "Step 4: Running FastQC on trimmed reads for $SAMPLE"
+    fastqc "$FASTP_DIR/${SAMPLE}_trim_R1.fastq.gz" "$FASTP_DIR/${SAMPLE}_trim_R2.fastq.gz" -o "$FASTQC_DIR"
+
+    # Step 5: Align reads to reference
+    echo "Step 5: Mapping $SAMPLE reads to reference genome"
+    bwa mem "$INDEX_PREFIX" \
+        "$FASTP_DIR/${SAMPLE}_trim_R1.fastq.gz" \
+        "$FASTP_DIR/${SAMPLE}_trim_R2.fastq.gz" | \
+        samtools sort -o "$BAM_DIR/${SAMPLE}.sorted.bam"
+
+    samtools index "$BAM_DIR/${SAMPLE}.sorted.bam"
+
+    # Step 6: Variant calling with FreeBayes
+    echo "Step 6: Calling variants for $SAMPLE with FreeBayes"
+    freebayes \
+        -p 1 \
+        -f "$MPOX_REF" \
+        "$BAM_DIR/${SAMPLE}.sorted.bam" > "$VCF_DIR/${SAMPLE}.vcf"
+
+    # Compress and index VCF
+    echo "Step 7: Compressing and indexing VCF for $SAMPLE"
+    bgzip -f "$VCF_DIR/${SAMPLE}.vcf"
+    bcftools index -f "$VCF_DIR/${SAMPLE}.vcf.gz"
+
+    # Step 8: Generate consensus sequence
+    echo "Step 8: Generating consensus sequence for $SAMPLE"
+    
+    # Safely escape CTG_NAME for sed
+    CTG_NAME=$(head -n1 "$MPOX_REF" | sed 's/^>//')
+    ESCAPED_CTG_NAME=$(printf '%s\n' "$CTG_NAME" | sed 's/[]\/$*.^[]/\\&/g')
+
+    # Replace contig header with sample name
+    bcftools consensus \
+        -f "$MPOX_REF" \
+        "$VCF_DIR/${SAMPLE}.vcf.gz" | \
+        sed "s/^>${ESCAPED_CTG_NAME}/>${SAMPLE}/" > "$FASTA_FILE"
+
+    echo "Sample $SAMPLE processing complete."
+done
+
+echo "All samples processed successfully."
+```
+
 Run for apobec3 signatures for sustained human-to-human transmission
 
 ```
