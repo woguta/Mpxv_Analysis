@@ -47,6 +47,7 @@ conda install bioconda::freebayes
 conda install bioconda::bwa
 conda install bioconda::bwa-mem2
 conda install bioconda::snakemake
+conda install bioconda::squirrel
 conda install bioconda::mamba
 conda install -n base mamba
 conda create -c bioconda -c conda-forge -n squirrel -y squirrel
