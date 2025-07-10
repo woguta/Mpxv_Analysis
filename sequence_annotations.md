@@ -93,6 +93,7 @@ for gz_file in "${FASTA_DIR}"/*.fasta.gz; do
             --cpus 3 \
             --mincontiglen 200 \
             --kingdom Viruses \
+            --gcode 11 \
             --centre WHO \
             --addgenes \
             --addmrna \
