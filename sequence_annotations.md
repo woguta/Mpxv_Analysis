@@ -878,3 +878,117 @@ if (nrow(agg_df) > 0) {
   cat("No data extracted. Output file not created.\n")
 }
 ```
+
+Extract reference proteins
+
+```
+#!/bin/bash
+
+# Input GenBank file
+gbk_file="./mpox_sierra/refseqs/Mpox_ref_NC_063383.1.gb"
+
+# Sample name
+sample_name="NC_063383_1"
+
+# Output root directory
+output_root="./mpox_sierra/prokka_proteins"
+mkdir -p "$output_root"
+
+# Initialize variables
+inside_cds=false
+opg=""
+protein_id=""
+protein_id_clean=""
+sequence=""
+collect_translation=false
+
+echo "[DEBUG] Reading GenBank file: $gbk_file"
+echo "[DEBUG] Output directory: $output_root"
+
+while IFS= read -r line || [[ -n "$line" ]]; do
+    # Optional: trace every line read (uncomment to debug full file reading)
+    # echo "[TRACE] $line"
+
+    # Relaxed CDS detection: any amount of leading whitespace + CDS
+    if [[ $line =~ ^[[:space:]]*CDS ]]; then
+        echo "[DEBUG] Found new CDS line: $line"
+        inside_cds=true
+        opg=""
+        protein_id=""
+        protein_id_clean=""
+        sequence=""
+        collect_translation=false
+        continue
+    fi
+
+    if $inside_cds; then
+
+        # Capture gene OPG
+        if [[ $line =~ /gene=\"(OPG[0-9]+)\" ]]; then
+            opg="${BASH_REMATCH[1]}"
+            echo "[DEBUG] gene: $opg"
+
+        # Capture protein_id
+        elif [[ $line =~ /protein_id=\"([^\"]+)\" ]]; then
+            protein_id="${BASH_REMATCH[1]}"
+            protein_id_clean="${protein_id//./_}"
+            echo "[DEBUG] protein_id: $protein_id_clean"
+
+        # Start of translation
+        elif [[ $line =~ /translation=\"([^\"]*) ]]; then
+            collect_translation=true
+            part="${BASH_REMATCH[1]}"
+            sequence="${part//[[:space:]]/}"
+            echo "[DEBUG] started translation"
+
+            # End of inline translation
+            if [[ $line =~ \"[[:space:]]*$ ]]; then
+                sequence="${sequence%\"}"
+                collect_translation=false
+                echo "[DEBUG] ended inline translation"
+            fi
+
+        # Continue collecting multiline translation
+        elif $collect_translation; then
+            stripped="${line//[[:space:]]/}"
+            sequence+="$stripped"
+            echo "[DEBUG] continuing translation"
+
+            if [[ $line == *\" ]]; then
+                sequence="${sequence%\"}"
+                collect_translation=false
+                echo "[DEBUG] ended multiline translation"
+            fi
+        fi
+
+        # Detect end of CDS block when new feature starts or ORIGIN line
+        if [[ $line =~ ^[[:space:]]*(gene|tRNA|rRNA|source|ORIGIN|misc) ]]; then
+            if [[ -n $opg && -n $protein_id && -n $sequence ]]; then
+                opg_dir="${output_root}/${opg}"
+                mkdir -p "$opg_dir"
+                fasta_id="${sample_name}_${opg}_${protein_id_clean}"
+                output_fasta="${opg_dir}/${fasta_id}.faa"
+                echo ">${fasta_id}" > "$output_fasta"
+                echo "$sequence" >> "$output_fasta"
+                echo "[INFO] Saved: $output_fasta"
+            else
+                echo "[WARN] Incomplete CDS skipped"
+            fi
+            inside_cds=false
+        fi
+    fi
+done < "$gbk_file"
+
+# Handle case where file ends inside CDS block
+if $inside_cds && [[ -n $opg && -n $protein_id && -n $sequence ]]; then
+    opg_dir="${output_root}/${opg}"
+    mkdir -p "$opg_dir"
+    fasta_id="${sample_name}_${opg}_${protein_id_clean}"
+    output_fasta="${opg_dir}/${fasta_id}.faa"
+    echo ">${fasta_id}" > "$output_fasta"
+    echo "$sequence" >> "$output_fasta"
+    echo "[INFO] Saved (final CDS): $output_fasta"
+fi
+
+echo "All OPG protein sequences extracted successfully."
+```
