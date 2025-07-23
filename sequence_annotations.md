@@ -394,7 +394,208 @@ for gff_file in "${GFF_DIR}"/*.gff; do
   fi
 done
 ```
+5. Annotate proteins using prokka (option b)
+```
+# Define directories
+COMBINED_FASTA="./mpox_sierra/combined_fasta"
+COMBINED_FASTA="${COMBINED_DIR}/mpox_clean_151.fa"
+FASTA_DIR="${COMBINED_DIR}/split_fasta"
+OUT_DIR="./mpox_sierra/prokka"
+protein_db="./mpox_sierra/refseqs/Mpox_ref_NC_063383.1.gb"
 
+# Make directories if they don't exist
+if [ ! -d "${OUT_DIR}" ] || [ ! -d "${FASTA_DIR}" ]; then
+  mkdir -p "${OUT_DIR}" "${FASTA_DIR}"
+fi
+
+# Check if combined FASTA exists
+if [ ! -f "${COMBINED_FASTA}" ]; then
+  echo "ERROR!!! Combined FASTA file not found at ${COMBINED_FASTA}"
+  exit 1
+fi
+
+# Display a message indicating splitting
+echo "Splitting the combined FASTA file..."
+
+# Split combined FASTA into individual files
+awk -v outdir="${FASTA_DIR}" '
+  /^>/ {
+    # Clean header to make a safe filename
+    header = substr($0, 2)
+    split(header, a, /[ \t]/)
+    filename = a[1]
+    gsub(/[^A-Za-z0-9._-]/, "_", filename)
+    out = outdir "/" filename ".fasta"
+    print $0 > out
+    next
+  }
+  {
+    print $0 >> out
+  }
+' "${COMBINED_FASTA}"
+
+echo "Splitting completed. Files are in ${FASTA_DIR}/"
+
+# Gzip each split FASTA file
+echo "gzipping individual files"
+for file in "${FASTA_DIR}"/*.fasta; do
+  gzip "$file"
+done
+
+# Check if required tools are available
+for cmd in csplit gzip gunzip awk bgzip samtools prokka; do
+  command -v "$cmd" >/dev/null 2>&1 || { echo "ERROR: $cmd not found. Please install it."; exit 1; }
+done
+
+echo "Running Prokka"
+# Loop through all fasta.gz files in the input directory
+for gz_file in "${FASTA_DIR}"/*.fasta.gz; do
+    if [ -f "$gz_file" ]; then
+        sample=$(basename "$gz_file" .fasta.gz)
+        temp_fasta="${FASTA_DIR}/${sample}.temp.fasta"
+        final_fasta="${FASTA_DIR}/${sample}.fasta"
+        compressed_fasta="${OUT_DIR}/${sample}.fasta.gz"
+        output_path="${OUT_DIR}/${sample}"
+
+        # Decompress the gz file to a temporary fasta file
+        echo "Decompressing ${gz_file} to ${temp_fasta}"
+        gunzip -c "$gz_file" > "$temp_fasta"
+
+        # Check if the temporary file is in FASTA format
+        if grep -q "^>" "$temp_fasta"; then
+            echo "File ${temp_fasta} is in FASTA format"
+            fasta_file="$temp_fasta"
+        else
+            # Convert to FASTA format if it's not
+            fasta_file="${FASTA_DIR}/${sample}.converted.fasta"
+            echo "Converting ${temp_fasta} to FASTA format"
+            seqret -sequence "$temp_fasta" -outseq "$fasta_file"
+        fi
+
+        # Clean the FASTA headers and save to the final fasta file
+        echo "Cleaning headers in ${fasta_file}"
+        awk '/^>/ {header=$0; gsub(/[|\/\-]/, "_", header); print header} !/^>/ {print}' "$fasta_file" > "$final_fasta"
+
+        # Ensure the final fasta file has a proper FASTA header
+        if ! grep -q "^>" "$final_fasta"; then
+        echo "ERROR!!! The file ${final_fasta} does not have a proper FASTA header. Adding default headers."
+
+        # Add default headers to each sequence
+        awk 'BEGIN {header_num=1} !/^>/ {print ">sequence_" header_num "\n" $0; header_num++} /^>/ {print}' "$final_fasta" > "${final_fasta}.tmp"
+        mv "${final_fasta}.tmp" "$final_fasta"
+        echo "Default headers added to ${final_fasta}"
+        else
+            echo "The file ${final_fasta} has been cleaned and is in proper FASTA format"
+
+        fi
+
+        # Compress the final fasta file
+        echo "Compressing ${final_fasta} to ${compressed_fasta}"
+        bgzip -c "$final_fasta" > "$compressed_fasta"
+
+        # Index the compressed fasta file
+        echo "Indexing ${compressed_fasta}"
+        samtools faidx "$compressed_fasta"
+
+        # Echo fasta file path for the current sample
+        echo "contigs_fasta for ${sample}: ${final_fasta}"
+
+        # Run the Prokka command on the current file
+        echo "Processing Prokka for ${sample}: ${final_fasta}"
+        prokka "$final_fasta" \
+            --outdir "$output_path" \
+            --cpus 1 \
+            --mincontiglen 200 \
+            --kingdom Viruses \
+            --gcode 11 \
+            --centre WHO-CPHRL \
+            --addgenes \
+            --addmrna \
+            --locustag MPXV \
+            --genus "Mpox virus" \
+            --proteins "$protein_db" \
+            --usegenus \
+            --compliant \
+            --rfam \
+            --force \
+            --debug
+
+        # Clean up all temp files
+        rm -f "$temp_fasta"
+
+    else
+        echo "ERROR!!! fasta.gz file not found: ${gz_file}"
+    fi
+done
+echo "Prokka annotation pipeline completed."
+```
+   
+7. Extracting proteins from prokka files
+```
+#!/bin/bash
+
+# Set directories
+PROKKA_DIR="./mpox_sierra/prokka"
+PROTEINS_DIR="./mpox_sierra/prokka_proteins"
+
+# Create output base directory
+mkdir -p "$PROTEINS_DIR"
+echo "[INFO] Output directory prepared: $PROTEINS_DIR"
+
+# Start scanning for proteins.faa files
+echo "[INFO] Searching for proteins.faa files under $PROKKA_DIR..."
+find "$PROKKA_DIR" -mindepth 2 -type f -name "proteins.faa" | while read -r faa_file; do
+    echo "------------------------------------------------------"
+    echo "[INFO] Processing file: $faa_file"
+
+    # Extract sample name from folder name
+    sample_name=$(basename "$(dirname "$faa_file")")
+    echo "[DEBUG] Sample name: $sample_name"
+
+    sequence=""
+    opg=""
+
+    # Read the .faa file line by line
+    while IFS= read -r line || [[ -n "$line" ]]; do
+        if [[ $line == ">"* ]]; then
+            # Write the previously read sequence, if any
+            if [[ -n $sequence && -n $opg ]]; then
+                opg_dir="${PROTEINS_DIR}/${opg}"
+                mkdir -p "$opg_dir"
+                output_file="${opg_dir}/${sample_name}_${opg}.faa"
+                {
+                    echo ">${sample_name}_${opg}"
+                    echo "$sequence"
+                } > "$output_file"
+                echo "[INFO] Wrote: $output_file"
+            fi
+
+            # Extract OPG from header line
+            opg=$(echo "$line" | grep -oP '~~~\K(OPG[0-9]+)(?=~~~)')
+            echo "[DEBUG] Found OPG: $opg in header line"
+
+            # Reset sequence
+            sequence=""
+        else
+            sequence+="$line"
+        fi
+    done < "$faa_file"
+
+    # Write the last sequence
+    if [[ -n $sequence && -n $opg ]]; then
+        opg_dir="${PROTEINS_DIR}/${opg}"
+        mkdir -p "$opg_dir"
+        output_file="${opg_dir}/${sample_name}_${opg}.faa"
+        {
+            echo ">${sample_name}_${opg}"
+            echo "$sequence"
+        } > "$output_file"
+        echo "[INFO] Wrote final: $output_file"
+    fi
+done
+
+echo "[DONE] All OPG protein sequences organized under: $PROTEINS_DIR/"
+```
 ## B. Variants calling
 Involves using snippy and variants annotation/prediction using snpeff, extraction using snpsift and R
 
